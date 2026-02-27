@@ -1,0 +1,30 @@
+[package]
+name = "Mist"
+version = "0.1.0"
+authors = ["Source 🖋️ Open 👐🏻 <Source/Open@Editor.Land>"]
+edition = "2024"
+license-file = "LICENSE"
+publish = false
+
+[lib]
+name = "mist"
+path = "Source/lib.rs"
+
+[dependencies]
+hickory-server = { workspace = true, features = ["dnssec-ring"] }
+hickory-proto = { workspace = true, features = ["dnssec-ring"] }
+hickory-client = { workspace = true }
+ring = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+once_cell = { workspace = true }
+portpicker = { workspace = true }
+async-trait = { workspace = true }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tokio = { workspace = true, features = ["test-util"] }
+futures = { workspace = true }
+rand = { workspace = true }

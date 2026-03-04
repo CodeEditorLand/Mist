@@ -1,4 +1,5 @@
 //! DNS Zone Module
+#![allow(clippy::useless_vec)]
 //!
 //! This module provides DNS zone configuration for the CodeEditorLand
 //! private network. It creates an authoritative zone for the editor.land

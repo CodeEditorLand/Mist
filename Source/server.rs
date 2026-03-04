@@ -1,3 +1,5 @@
+#![allow(clippy::tabs_in_doc_comments)]
+
 use std::{
 	net::{IpAddr, Ipv4Addr, SocketAddr},
 	sync::Arc,

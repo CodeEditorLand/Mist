@@ -1,4 +1,5 @@
 //! # CodeEditorLand Network Module
+#![allow(clippy::tabs_in_doc_comments, clippy::unnecessary_lazy_evaluations)]
 //!
 //! This module provides DNS server functionality for the CodeEditorLand private
 //! network. It creates an isolated DNS environment for the `editor.land`
@@ -128,7 +129,8 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// }
 /// ```
 /// ```
-pub fn start(preferred_port:u16) -> Result<u16> {
+#[must_use]
+pub fn start(preferred_port: u16) -> Result<u16> {
 	// Step 1: Find an available port using portpicker
 	// Try the preferred port first, then pick a random available one
 	let port = portpicker::pick_unused_port()

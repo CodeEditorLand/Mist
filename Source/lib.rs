@@ -129,7 +129,6 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// }
 /// ```
 /// ```
-#[must_use]
 pub fn start(preferred_port: u16) -> Result<u16> {
 	// Step 1: Find an available port using portpicker
 	// Try the preferred port first, then pick a random available one

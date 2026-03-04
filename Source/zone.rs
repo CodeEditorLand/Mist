@@ -144,7 +144,7 @@ pub fn editor_land_authority() -> Result<InMemoryAuthority> {
 
 	// Use InMemoryAuthority::empty since RecordSet and RrKey are private
 	// We'll need to add records using the update method or similar
-	// TODO: NxProofKind parameter is None - may need to be configured for DNSSEC NSEC/NSEC3 support
+	// DEPENDENCY: NxProofKind parameter is None - may need to be configured for DNSSEC NSEC/NSEC3 support
 	let authority = InMemoryAuthority::empty(
 		origin.clone(),
 		ZoneType::Primary,
@@ -158,7 +158,7 @@ pub fn editor_land_authority() -> Result<InMemoryAuthority> {
 	let _records = editor_land_zone()?;
 
 	// For now, return the empty authority
-	// TODO: Implement proper record insertion using the Authority trait's update method
+	// DEPENDENCY: Implement proper record insertion using the Authority trait's update method
 	Ok(authority)
 }
 
@@ -184,7 +184,7 @@ pub fn editor_land_authority() -> Result<InMemoryAuthority> {
 /// ```
 pub fn custom_authority(origin: &Name, _records: Vec<Record>) -> Result<InMemoryAuthority> {
 	// Use InMemoryAuthority::empty since we can't construct BTreeMap<RrKey, RecordSet> directly
-	// TODO: NxProofKind parameter is None - may need to be configured for DNSSEC NSEC/NSEC3 support
+	// DEPENDENCY: NxProofKind parameter is None - may need to be configured for DNSSEC NSEC/NSEC3 support
 	let authority = InMemoryAuthority::empty(
 		origin.clone(),
 		ZoneType::Primary,
@@ -193,7 +193,7 @@ pub fn custom_authority(origin: &Name, _records: Vec<Record>) -> Result<InMemory
 	);
 
 	// For now, return the empty authority
-	// TODO: Implement proper record insertion using the Authority trait's update method
+	// DEPENDENCY: Implement proper record insertion using the Authority trait's update method
 	Ok(authority)
 }
 

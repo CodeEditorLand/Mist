@@ -51,7 +51,7 @@ pub fn build_catalog(_dns_port:u16) -> Result<Catalog> {
 	let editor_land_origin = hickory_proto::rr::Name::from_ascii("editor.land.").unwrap();
 
 	// Create an empty InMemoryAuthority for editor.land
-	// TODO: NxProofKind parameter is None - may need to be configured for DNSSEC NSEC/NSEC3 support
+	// DEPENDENCY: NxProofKind parameter is None - may need to be configured for DNSSEC NSEC/NSEC3 support
 	let authority = InMemoryAuthority::empty(
 		editor_land_origin.clone(),
 		ZoneType::Primary,

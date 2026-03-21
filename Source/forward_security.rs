@@ -38,7 +38,6 @@ use hickory_proto::rr::Name;
 /// # Default Allowlist
 ///
 /// - `update.editor.land.` - For application updates
-/// - `cdn.crashlytics.com.` - For crash reporting (if used)
 ///
 /// # Example
 ///
@@ -50,7 +49,6 @@ use hickory_proto::rr::Name;
 pub fn default_forward_allowlist() -> impl Iterator<Item = Result<Name>> {
 	vec![
 		Name::from_ascii("update.editor.land."),
-		Name::from_ascii("cdn.crashlytics.com."),
 	]
 	.into_iter()
 	.map(|r| r.map_err(|e| anyhow!("Failed to parse domain name: {}", e)))

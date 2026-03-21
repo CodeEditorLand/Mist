@@ -69,7 +69,7 @@ private network communication remains local and secure.
     local communication.
 2.  **Enforce Forward Security:** Implement a forward allowlist that only
     permits DNS resolution to specific, trusted external domains (e.g.,
-    `update.editor.land`, `cdn.crashlytics.com`).
+    `update.editor.land`).
 3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys for
     DNSSEC, providing cryptographic assurance of DNS responses.
 4.  **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
@@ -104,28 +104,28 @@ private network communication remains local and secure.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Applications (Wind, Cocoon)                  │
+│                     Applications (Wind, Cocoon)                 │
 │                        (DNS Queries)                            │
 └────────────────────────────────────┬────────────────────────────┘
                                      │
                                      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Mist DNS Server (127.0.0.1:PORT)             │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │                   DNS Catalog                             │  │
+┌────────────────────────────────────────────────────────────────┐
+│                     Mist DNS Server (127.0.0.1:PORT)           │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                   DNS Catalog                            │  │
 │  │  ┌────────────────────┐  ┌──────────────────────┐        │  │
 │  │  │ Editor.land Zone   │  │ Forward Allowlist    │        │  │
-│  │  │ (Authoritative)    │  │ (Restricted Access) │        │  │
-│  │  │ *.editor.land →    │  │ update.editor.land  │        │  │
-│  │  │ 127.0.0.1          │  │ cdn.crashlytics.com  │        │  │
+│  │  │ (Authoritative)    │  │ (Restricted Access)  │        │  │
+│  │  │ *.editor.land →    │  │ update.editor.land   │        │  │
+│  │  │ 127.0.0.1          │  │                      │        │  │
 │  │  └────────────────────┘  └──────────────────────┘        │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                                                               │
-│  Hickory DNS Server Core (UDP + TCP)                          │
-│  - Request parsing and response construction                  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│  Hickory DNS Server Core (UDP + TCP)                           │
+│  - Request parsing and response construction                   │
 │  - Zone lookup and record matching                             │
 │  - DNSSEC signature verification                               │
-└─────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ### Components
@@ -216,7 +216,6 @@ All subdomains of `editor.land` resolve to `127.0.0.1`:
 Only allowlisted external domains can be resolved:
 
 - `update.editor.land` - For application updates
-- `cdn.crashlytics.com` - For crash reporting
 
 All other external queries are refused by default.
 

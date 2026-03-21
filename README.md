@@ -30,7 +30,7 @@
 			</h3>
 		</td>
 		<td align="left" valign="middle">
-			<h3 align="left"> 🏞️</h3>
+			<h3 align="left"> 🏞️</h3>
 		</td>
 		<td align="left" valign="middle">
 			<h3 align="left"> + </h3>
@@ -57,35 +57,44 @@
 [![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
 [![Hickory DNS Version](https://img.shields.io/badge/Hickory_v0.24-blue.svg)](https://github.com/hickory-dns/hickory-dns)
 
-Welcome to **Mist**! This element provides DNS isolation and private network resolution for the Land Code Editor. It creates a secure DNS sandbox that resolves all `*.editor.land` domains locally to `127.0.0.1`, ensuring that all private network communication remains local and secure.
+Welcome to **Mist**! This element provides DNS isolation and private network
+resolution for the Land Code Editor. It creates a secure DNS sandbox that
+resolves all `*.editor.land` domains locally to `127.0.0.1`, ensuring that all
+private network communication remains local and secure.
 
 **Mist** is engineered to:
 
-1.  **Provide Private DNS Resolution:** Operate a local DNS server authoritative for the
-    `editor.land` zone, resolving all subdomains to localhost for secure local communication.
-2.  **Enforce Forward Security:** Implement a forward allowlist that only permits DNS resolution
-    to specific, trusted external domains (e.g., `update.editor.land`, `cdn.crashlytics.com`).
-3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys for DNSSEC, providing
-    cryptographic assurance of DNS responses.
-4.  **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use the local DNS
-    server via a custom DNS override, ensuring they cannot access arbitrary external hosts.
+1.  **Provide Private DNS Resolution:** Operate a local DNS server authoritative
+    for the `editor.land` zone, resolving all subdomains to localhost for secure
+    local communication.
+2.  **Enforce Forward Security:** Implement a forward allowlist that only
+    permits DNS resolution to specific, trusted external domains (e.g.,
+    `update.editor.land`, `cdn.crashlytics.com`).
+3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys for
+    DNSSEC, providing cryptographic assurance of DNS responses.
+4.  **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
+    the local DNS server via a custom DNS override, ensuring they cannot access
+    arbitrary external hosts.
 
 ---
 
 ## Key Features 🌫️
 
-- **Hickory DNS Server:** Built on the high-performance Hickory DNS library (formerly Trust-DNS),
-  providing a robust, async DNS server implementation.
-- **Authoritative Zone:** Operates as an authoritative DNS server for `editor.land`, resolving
-  all subdomains (`*.editor.land`) to `127.0.0.1` for secure local communication.
-- **Forward Security:** Implements a strict allowlist for external DNS queries, preventing
-  sidecars from reaching unauthorized external hosts by default.
-- **DNSSEC Support:** Signs the authoritative zone with ECDSA P-256 keys, providing cryptographic
-  integrity and authenticity for DNS responses.
-- **Dynamic Port Selection:** Automatically selects an available port if the preferred port
-  (5380) is unavailable, ensuring robust startup behavior.
-- **Async Runtime:** Built on Tokio for efficient, non-blocking DNS query handling.
-- **Cross-Platform:** Works on macOS, Linux, and Windows with consistent behavior.
+- **Hickory DNS Server:** Built on the high-performance Hickory DNS library
+  (formerly Trust-DNS), providing a robust, async DNS server implementation.
+- **Authoritative Zone:** Operates as an authoritative DNS server for
+  `editor.land`, resolving all subdomains (`*.editor.land`) to `127.0.0.1` for
+  secure local communication.
+- **Forward Security:** Implements a strict allowlist for external DNS queries,
+  preventing sidecars from reaching unauthorized external hosts by default.
+- **DNSSEC Support:** Signs the authoritative zone with ECDSA P-256 keys,
+  providing cryptographic integrity and authenticity for DNS responses.
+- **Dynamic Port Selection:** Automatically selects an available port if the
+  preferred port (5380) is unavailable, ensuring robust startup behavior.
+- **Async Runtime:** Built on Tokio for efficient, non-blocking DNS query
+  handling.
+- **Cross-Platform:** Works on macOS, Linux, and Windows with consistent
+  behavior.
 
 ---
 
@@ -121,12 +130,18 @@ Welcome to **Mist**! This element provides DNS isolation and private network res
 
 ### Components
 
-- **`lib.rs`**: Main library entry point, exports public API and manages the DNS server state.
-- **`server.rs`**: DNS server implementation using Hickory, handles UDP/TCP listeners and catalog management.
-- **`zone.rs`**: DNS zone configuration for `editor.land`, including record definitions and authority creation.
-- **`resolver.rs`**: DNS resolver for use by other components, provides interface to the local DNS server.
-- **`forward_security.rs`**: Forward allowlist management, restricts which external domains can be resolved.
-- **`tests/integration.rs`**: Comprehensive integration tests for DNS server functionality.
+- **`lib.rs`**: Main library entry point, exports public API and manages the DNS
+  server state.
+- **`server.rs`**: DNS server implementation using Hickory, handles UDP/TCP
+  listeners and catalog management.
+- **`zone.rs`**: DNS zone configuration for `editor.land`, including record
+  definitions and authority creation.
+- **`resolver.rs`**: DNS resolver for use by other components, provides
+  interface to the local DNS server.
+- **`forward_security.rs`**: Forward allowlist management, restricts which
+  external domains can be resolved.
+- **`tests/integration.rs`**: Comprehensive integration tests for DNS server
+  functionality.
 
 ---
 
@@ -269,14 +284,14 @@ RUST_LOG=debug cargo test
 
 **Mist** implements several security features:
 
-1.  **Private Network Isolation:** All `editor.land` domains resolve to localhost, preventing
-    any external network access for private services.
-2.  **Forward Allowlist:** External DNS queries are restricted to a trusted allowlist, preventing
-    sidecars from accessing arbitrary external hosts.
-3.  **DNSSEC:** Zone signing provides cryptographic assurance of DNS responses, preventing
-    DNS spoofing attacks.
-4.  **Loopback Binding:** The DNS server only binds to `127.0.0.1`, preventing external access
-    to the private DNS server.
+1.  **Private Network Isolation:** All `editor.land` domains resolve to
+    localhost, preventing any external network access for private services.
+2.  **Forward Allowlist:** External DNS queries are restricted to a trusted
+    allowlist, preventing sidecars from accessing arbitrary external hosts.
+3.  **DNSSEC:** Zone signing provides cryptographic assurance of DNS responses,
+    preventing DNS spoofing attacks.
+4.  **Loopback Binding:** The DNS server only binds to `127.0.0.1`, preventing
+    external access to the private DNS server.
 
 ---
 
@@ -284,36 +299,81 @@ RUST_LOG=debug cargo test
 
 **Mist** is integrated into the Land ecosystem:
 
-- **Mountain**: Starts the DNS server during application initialization and provides the port
-  to other components via the `DnsPort` managed state.
-- **Air**: Uses the DNS server for secure HTTP requests, configuring HTTP clients to use the
-  local DNS resolver.
-- **SideCar**: Spawns Node.js sidecars with DNS override configuration, ensuring all DNS
-  queries go through the local server.
-- **Cocoon**: The Node.js extension host can resolve `editor.land` domains via the local DNS
-  server for gRPC communication with Mountain.
+- **Mountain**: Starts the DNS server during application initialization and
+  provides the port to other components via the `DnsPort` managed state.
+- **Air**: Uses the DNS server for secure HTTP requests, configuring HTTP
+  clients to use the local DNS resolver.
+- **SideCar**: Spawns Node.js sidecars with DNS override configuration, ensuring
+  all DNS queries go through the local server.
+- **Cocoon**: The Node.js extension host can resolve `editor.land` domains via
+  the local DNS server for gRPC communication with Mountain.
 
 ---
 
-## License 📜
+## License ⚖️
 
-This project is licensed under the **CC0 1.0 Universal** license - see the [LICENSE](../../LICENSE) file for details.
-
----
-
-## Contributing 🤝
-
-Contributions are welcome! Please ensure:
-
-1.  All tests pass: `cargo test`
-2.  Code follows Rust style guidelines: `cargo fmt`
-3.  No clippy warnings: `cargo clippy`
-4.  Documentation is updated as needed
+This project is released into the public domain under the **Creative Commons CC0
+Universal** license. You are free to use, modify, distribute, and build upon
+this work for any purpose, without any restrictions. For the full legal text,
+see the [`LICENSE`](https://github.com/CodeEditorLand/Mist/tree/Current/) file.
 
 ---
 
-## Acknowledgments 🙏
+## Changelog 📜
 
-- **Hickory DNS Team** - For creating an excellent DNS library
-- **Trust-DNS Team** - For the original implementation that Hickory builds upon
-- **Land Team** - For the vision of a secure, private development environment
+Stay updated with our progress! See
+[`CHANGELOG.md`](https://github.com/CodeEditorLand/Mist/tree/Current/) for a
+history of changes specific to **Mist**.
+
+---
+
+## Funding & Acknowledgements 🙏🏻
+
+**Mist** is a core element of the **Land** ecosystem. This project is funded
+through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund established by
+[NLnet](https://NLnet.NL) with financial support from the European Commission's
+[Next Generation Internet](https://ngi.eu) program. Learn more at the
+[NLnet project page](https://NLnet.NL/project/Land).
+
+<table>
+	<thead>
+		<tr>
+			<th align="left"><strong>Land</strong></th>
+			<th align="left"><strong>PlayForm</strong></th>
+			<th align="left"><strong>NLnet</strong></th>
+			<th align="left"><strong>NGI0 Commons Fund</strong></th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td align="left" valign="middle">
+				<a href="https://Editor.Land">
+					<img width="60" src="https://raw.githubusercontent.com/CodeEditorLand/Asset/refs/heads/Current/Logo/Land.svg" alt="Land">
+				</a>
+			</td>
+			<td align="left" valign="middle">
+				<a href="https://PlayForm.Cloud">
+					<img width="76" src="https://raw.githubusercontent.com/PlayForm/Asset/refs/heads/Current/Logo/PlayForm.svg" alt="PlayForm">
+				</a>
+			</td>
+			<td align="left" valign="middle">
+				<a href="https://NLnet.NL">
+					<img width="240" src="https://NLnet.NL/logo/banner.svg" alt="NLnet">
+				</a>
+			</td>
+			<td align="left" valign="middle">
+				<a href="https://NLnet.NL/commonsfund">
+					<img width="240" src="https://NLnet.NL/image/logos/NGI0CommonsFund_tag_black_mono.svg" alt="NGI0 Commons Fund">
+				</a>
+			</td>
+		</tr>
+	</tbody>
+</table>
+
+---
+
+**Project Maintainers**: Source Open
+([Source/Open@Editor.Land](mailto:Source/Open@Editor.Land)) |
+[GitHub Repository](https://github.com/CodeEditorLand/Mist) |
+[Report an Issue](https://github.com/CodeEditorLand/Mist/issues) |
+[Security Policy](https://github.com/CodeEditorLand/Mist/security/policy)

@@ -57,24 +57,23 @@
 [![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
 [![Hickory DNS Version](https://img.shields.io/badge/Hickory_v0.24-blue.svg)](https://github.com/hickory-dns/hickory-dns)
 
-Welcome to **Mist**! This element provides DNS isolation and private network
-resolution for the Land Code Editor. It creates a secure DNS sandbox that
-resolves all `*.editor.land` domains locally to `127.0.0.1`, ensuring that all
-private network communication remains local and secure.
+**Mist** provides DNS isolation and private network resolution for the Land Code
+Editor. It creates a secure DNS sandbox that resolves all `*.editor.land`
+domains locally to `127.0.0.1`, ensuring all private network communication stays
+local.
 
 **Mist** is engineered to:
 
-1.  **Provide Private DNS Resolution:** Operate a local DNS server authoritative
-    for the `editor.land` zone, resolving all subdomains to localhost for secure
-    local communication.
-2.  **Enforce Forward Security:** Implement a forward allowlist that only
-    permits DNS resolution to specific, trusted external domains (e.g.,
-    `update.editor.land`).
-3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys for
-    DNSSEC, providing cryptographic assurance of DNS responses.
-4.  **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
-    the local DNS server via a custom DNS override, ensuring they cannot access
-    arbitrary external hosts.
+1. **Provide Private DNS Resolution:** Operate a local DNS server authoritative
+   for the `editor.land` zone, resolving all subdomains to localhost.
+2. **Enforce Forward Security:** Implement a forward allowlist that only permits
+   DNS resolution to specific, trusted external domains (e.g.,
+   `update.editor.land`).
+3. **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys,
+   providing cryptographic assurance of DNS responses.
+4. **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
+   the local DNS server via a custom DNS override, ensuring they cannot reach
+   arbitrary external hosts.
 
 ---
 
@@ -100,7 +99,10 @@ private network communication remains local and secure.
 
 ## Architecture 🏗️
 
-**Mist** follows a layered architecture:
+**Mist** follows a layered architecture.
+
+DNS queries from applications flow through the catalog, which handles zone
+lookups and forward allowlist enforcement.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -283,14 +285,14 @@ RUST_LOG=debug cargo test
 
 **Mist** implements several security features:
 
-1.  **Private Network Isolation:** All `editor.land` domains resolve to
-    localhost, preventing any external network access for private services.
-2.  **Forward Allowlist:** External DNS queries are restricted to a trusted
-    allowlist, preventing sidecars from accessing arbitrary external hosts.
-3.  **DNSSEC:** Zone signing provides cryptographic assurance of DNS responses,
-    preventing DNS spoofing attacks.
-4.  **Loopback Binding:** The DNS server only binds to `127.0.0.1`, preventing
-    external access to the private DNS server.
+1. **Private Network Isolation:** All `editor.land` domains resolve to
+   localhost, preventing any external network access for private services.
+2. **Forward Allowlist:** External DNS queries are restricted to a trusted
+   allowlist, preventing sidecars from accessing arbitrary external hosts.
+3. **DNSSEC:** Zone signing provides cryptographic assurance of DNS responses,
+   preventing DNS spoofing attacks.
+4. **Loopback Binding:** The DNS server only binds to `127.0.0.1`, preventing
+   external access to the private DNS server.
 
 ---
 
@@ -298,14 +300,14 @@ RUST_LOG=debug cargo test
 
 **Mist** is integrated into the Land ecosystem:
 
-- **Mountain**: Starts the DNS server during application initialization and
-  provides the port to other components via the `DnsPort` managed state.
-- **Air**: Uses the DNS server for secure HTTP requests, configuring HTTP
+- **Mountain:** Starts the DNS server during initialization and exposes the port
+  to other components via the `DnsPort` managed state.
+- **Air:** Uses the DNS server for secure HTTP requests, configuring HTTP
   clients to use the local DNS resolver.
-- **SideCar**: Spawns Node.js sidecars with DNS override configuration, ensuring
-  all DNS queries go through the local server.
-- **Cocoon**: The Node.js extension host can resolve `editor.land` domains via
-  the local DNS server for gRPC communication with Mountain.
+- **SideCar:** Spawns Node.js sidecars with DNS override configuration, ensuring
+  all queries go through the local server.
+- **Cocoon:** The Node.js extension host resolves `editor.land` domains via the
+  local DNS server for gRPC communication with Mountain.
 
 ---
 
@@ -328,8 +330,10 @@ history of changes specific to **Mist**.
 
 ## Funding & Acknowledgements 🙏🏻
 
-**Mist** is a core element of the **Land** ecosystem. This project is funded
-through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund established by
+**Mist** is a core element of the **Land** ecosystem.
+
+This project is funded through
+[NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund established by
 [NLnet](https://NLnet.NL) with financial support from the European Commission's
 [Next Generation Internet](https://ngi.eu) program. Learn more at the
 [NLnet project page](https://NLnet.NL/project/Land).

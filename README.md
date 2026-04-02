@@ -30,7 +30,7 @@
 			</h3>
 		</td>
 		<td align="left" valign="middle">
-			<h3 align="left"> 🏞️</h3>
+			<h3 align="left"> 🏞️</h3>
 		</td>
 		<td align="left" valign="middle">
 			<h3 align="left"> + </h3>
@@ -51,7 +51,9 @@
 
 ---
 
-# **Mist** 🌫️ DNS Isolation for the editor.land Private Network
+# **Mist** 🌫️
+
+DNS Isolation for the editor.land Private Network
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](../../LICENSE)
 [![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
@@ -313,10 +315,9 @@ RUST_LOG=debug cargo test
 
 ## License ⚖️
 
-This project is released into the public domain under the **Creative Commons CC0
-Universal** license. You are free to use, modify, distribute, and build upon
-this work for any purpose, without any restrictions. For the full legal text,
-see the [`LICENSE`](https://github.com/CodeEditorLand/Mist/tree/Current/) file.
+This project is licensed under Creative Commons CC0.
+
+See the LICENSE file for details.
 
 ---
 
@@ -330,13 +331,14 @@ history of changes specific to **Mist**.
 
 ## Funding & Acknowledgements 🙏🏻
 
-**Mist** is a core element of the **Land** ecosystem.
+Code Editor Land is funded through the NGI0 Commons Fund, established by NLnet
+with financial support from the European Commission's Next Generation Internet
+programme, under grant agreement No. 101135429.
 
-This project is funded through
-[NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund established by
-[NLnet](https://NLnet.NL) with financial support from the European Commission's
-[Next Generation Internet](https://ngi.eu) program. Learn more at the
-[NLnet project page](https://NLnet.NL/project/Land).
+The project is operated by PlayForm, based in Sofia, Bulgaria.
+
+PlayForm acts as the open-source steward for Code Editor Land under the NGI0
+Commons Fund grant.
 
 <table>
 	<thead>

@@ -37,11 +37,11 @@ use std::thread;
 use anyhow::Result;
 use once_cell::sync::OnceCell;
 
-// Public module exports
-pub mod server;
-pub mod zone;
-pub mod resolver;
-pub mod forward_security;
+// Public module exports (PascalCase per project convention)
+pub mod Server;
+pub mod Zone;
+pub mod Resolver;
+pub mod ForwardSecurity;
 
 /// Global DNS port number.
 ///
@@ -145,11 +145,11 @@ pub fn start(preferred_port: u16) -> Result<u16> {
 		.map_err(|_| anyhow::anyhow!("DNS port has already been set"))?;
 
 	// Step 3: Build the DNS catalog
-	let catalog = server::build_catalog(port)?;
+	let catalog = Server::BuildCatalog(port)?;
 
 	// Step 4: Spawn the DNS server as a background task
 	thread::spawn(move || {
-		if let Err(e) = server::serve_sync(catalog, port) {
+		if let Err(e) = Server::ServeSync(catalog, port) {
 			eprintln!("DNS server error: {:?}", e);
 		}
 	});
@@ -202,15 +202,13 @@ mod tests {
 
 	#[test]
 	fn test_build_catalog_api() {
-		// Test that we can build a catalog directly
-		let catalog = server::build_catalog(15356);
+		let catalog = Server::BuildCatalog(15356);
 		assert!(catalog.is_ok(), "Should be able to build catalog");
 	}
 
 	#[test]
 	fn test_build_zone_api() {
-		// Test that we can build a zone directly
-		let zone = zone::editor_land_zone();
+		let zone = Zone::EditorLandZone();
 		assert!(zone.is_ok(), "Should be able to build zone");
 	}
 }

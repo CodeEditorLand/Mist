@@ -1,0 +1,5 @@
+debug
+release
+.rustc_info.json
+.rustdoc_fingerprint.json
+CACHEDIR.TAG

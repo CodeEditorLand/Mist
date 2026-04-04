@@ -329,6 +329,14 @@ history of changes specific to **Mist**.
 
 ---
 
+
+## See Also
+
+- [Architecture Overview](https://editor.land/Doc/architecture)
+- [Mountain](https://github.com/CodeEditorLand/Mountain)
+- [Vine](https://github.com/CodeEditorLand/Vine)
+- [Air](https://github.com/CodeEditorLand/Air)
+
 ## Funding & Acknowledgements 🙏🏻
 
 Code Editor Land is funded through the NGI0 Commons Fund, established by NLnet

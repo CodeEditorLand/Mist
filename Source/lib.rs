@@ -1,9 +1,9 @@
-//! # CodeEditorLand Network Module
+//! # Mist: Private DNS for Local-First Networking
 #![allow(clippy::tabs_in_doc_comments, clippy::unnecessary_lazy_evaluations)]
 //!
-//! This module provides DNS server functionality for the CodeEditorLand private
-//! network. It creates an isolated DNS environment for the `editor.land`
-//! domain, enabling secure local communication between application components.
+//! Mist gives Land its own private DNS so editor components can find each
+//! other on `*.editor.land` without touching the public internet. All queries
+//! resolve to `127.0.0.1`. No external DNS leaks, no configuration needed.
 //!
 //! ## Features
 //!

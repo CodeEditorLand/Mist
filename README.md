@@ -64,18 +64,18 @@ Editor. It creates a secure DNS sandbox that resolves all `*.editor.land`
 domains locally to `127.0.0.1`, ensuring all private network communication stays
 local.
 
-**Mist** is engineered to:
+**What Mist gives you:**
 
-1. **Provide Private DNS Resolution:** Operate a local DNS server authoritative
-   for the `editor.land` zone, resolving all subdomains to localhost.
-2. **Enforce Forward Security:** Implement a forward allowlist that only permits
-   DNS resolution to specific, trusted external domains (e.g.,
-   `update.editor.land`).
-3. **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys,
-   providing cryptographic assurance of DNS responses.
-4. **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
-   the local DNS server via a custom DNS override, ensuring they cannot reach
-   arbitrary external hosts.
+1. **Zero-config private networking.** All `*.editor.land` domains resolve to
+   `127.0.0.1`. Components find each other automatically, no `/etc/hosts`
+   editing needed.
+2. **Extension isolation.** Cocoon's Node.js process uses Mist's DNS. Extensions
+   can only resolve domains on the forward allowlist. No phone-home to arbitrary
+   hosts.
+3. **Signed DNS responses.** ECDSA P-256 DNSSEC on the `editor.land` zone.
+   Cryptographic proof that DNS answers are authentic.
+4. **Dynamic port allocation.** `portpicker` finds available ports automatically.
+   No conflicts, no manual configuration.
 
 ---
 

@@ -49,43 +49,248 @@
 	</tr>
 </table>
 
-
 ---
 
 # **Mist**&#x2001;🌫️
 
-> **Development environments that communicate over the public internet expose services to unnecessary risk. DNS resolution for local services goes through external resolvers, leaking information about the development setup.**
+DNS Isolation for the editor.land Private Network
 
-_"Nothing leaks to the public internet. A clean network boundary between the editor and the outside world."_
+> **Development environments that communicate over the public internet expose
+> services to unnecessary risk. DNS resolution for local services goes through
+> external resolvers, leaking information about the development setup.**
+
+_"Nothing leaks to the public internet. A clean network boundary between the
+editor and the outside world."_
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](../../LICENSE)
-[![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
+[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
 [![Hickory DNS Version](https://img.shields.io/badge/Hickory_v0.24-blue.svg)](https://github.com/hickory-dns/hickory-dns)
 
-Mist creates a fully sandboxed DNS zone that resolves every `*.editor.land` domain to `127.0.0.1`. All Land services communicate through this local layer. Nothing leaks to the public internet.
+📖 **[Rust API Documentation](https://Rust.Documentation.Editor.Land/Mist/)**
+
+Welcome to **Mist**! This element provides DNS isolation and private network
+resolution for the Land Code Editor. It creates a secure DNS sandbox that
+resolves all `*.editor.land` domains locally to `127.0.0.1`, ensuring that all
+private network communication remains local and secure.
+
+**Mist** is engineered to:
+
+1.  **Provide Private DNS Resolution:** Operate a local DNS server authoritative
+    for the `editor.land` zone, resolving all subdomains to localhost for secure
+    local communication.
+2.  **Enforce Forward Security:** Implement a forward allowlist that only
+    permits DNS resolution to specific, trusted external domains (e.g.,
+    `update.editor.land`).
+3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys for
+    DNSSEC, providing cryptographic assurance of DNS responses.
+4.  **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
+    the local DNS server via a custom DNS override, ensuring they cannot access
+    arbitrary external hosts.
 
 ---
 
-## What It Does&#x2001;🔐
+## Key Features&#x2001;🌫️
 
-- **Local DNS sandbox.** Every `*.editor.land` domain resolves to `127.0.0.1`.
-- **Network isolation.** All Land services communicate locally, never through external DNS.
-- **Zero public exposure.** Development services are invisible to the public internet.
+- **Hickory DNS Server:** Built on the high-performance Hickory DNS library
+  (formerly Trust-DNS), providing a robust, async DNS server implementation.
+- **Authoritative Zone:** Operates as an authoritative DNS server for
+  `editor.land`, resolving all subdomains (`*.editor.land`) to `127.0.0.1` for
+  secure local communication.
+- **Forward Security:** Implements a strict allowlist for external DNS queries,
+  preventing sidecars from reaching unauthorized external hosts by default.
+- **DNSSEC Support:** Signs the authoritative zone with ECDSA P-256 keys,
+  providing cryptographic integrity and authenticity for DNS responses.
+- **Dynamic Port Selection:** Automatically selects an available port if the
+  preferred port (5380) is unavailable, ensuring robust startup behavior.
+- **Async Runtime:** Built on Tokio for efficient, non-blocking DNS query
+  handling.
+- **Cross-Platform:** Works on macOS, Linux, and Windows with consistent
+  behavior.
 
 ---
 
-## Development&#x2001;🛠️
+## Architecture&#x2001;🏗️
 
-Mist is a component of the Land workspace. Follow the
-[Land Repository](https://github.com/CodeEditorLand/Land) instructions to
-build and run.
+**Mist** follows a layered architecture:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Applications (Wind, Cocoon)                 │
+│                        (DNS Queries)                            │
+└────────────────────────────────────┬────────────────────────────┘
+                                     │
+                                     ▼
+┌────────────────────────────────────────────────────────────────┐
+│                     Mist DNS Server (127.0.0.1:PORT)           │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                   DNS Catalog                            │  │
+│  │  ┌────────────────────┐  ┌──────────────────────┐        │  │
+│  │  │ Editor.land Zone   │  │ Forward Allowlist    │        │  │
+│  │  │ (Authoritative)    │  │ (Restricted Access)  │        │  │
+│  │  │ *.editor.land →    │  │ update.editor.land   │        │  │
+│  │  │ 127.0.0.1          │  │                      │        │  │
+│  │  └────────────────────┘  └──────────────────────┘        │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                │
+│  Hickory DNS Server Core (UDP + TCP)                           │
+│  - Request parsing and response construction                   │
+│  - Zone lookup and record matching                             │
+│  - DNSSEC signature verification                               │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Components
+
+- **`lib.rs`**: Main library entry point, exports public API and manages the DNS
+  server state.
+- **`server.rs`**: DNS server implementation using Hickory, handles UDP/TCP
+  listeners and catalog management.
+- **`zone.rs`**: DNS zone configuration for `editor.land`, including record
+  definitions and authority creation.
+- **`resolver.rs`**: DNS resolver for use by other components, provides
+  interface to the local DNS server.
+- **`forward_security.rs`**: Forward allowlist management, restricts which
+  external domains can be resolved.
+- **`tests/integration.rs`**: Comprehensive integration tests for DNS server
+  functionality.
 
 ---
 
-## License&#x2001;⚖️
+## DNS Zone Configuration&#x2001;📋
 
-CC0 1.0 Universal. Public domain. No restrictions.
-[LICENSE](https://github.com/CodeEditorLand/Mist/tree/Current/LICENSE)
+### Authoritative Zone: `editor.land`
+
+All subdomains of `editor.land` resolve to `127.0.0.1`:
+
+- `code.editor.land` → `127.0.0.1`
+- `api.editor.land` → `127.0.0.1`
+- `*.editor.land` → `127.0.0.1`
+
+### Forward Allowlist
+
+Only allowlisted external domains can be resolved:
+
+- `update.editor.land` — For application updates
+
+All other external queries are refused by default.
+
+### DNSSEC
+
+The `editor.land` zone is signed with ECDSA P-256 keys:
+
+- DNSKEY records provide the public signing key
+- RRSIG records provide cryptographic signatures
+- Clients can verify the authenticity of DNS responses
+
+---
+
+## Usage&#x2001;🔧
+
+### Starting the DNS Server
+
+```rust
+use Mist::start;
+
+// Start on preferred port 5380
+let Port = Mist::start(5380)?;
+
+// Or let the system select an available port
+let Port = Mist::start(0)?;
+
+println!("DNS server running on 127.0.0.1:{}", Port);
+```
+
+### Getting the DNS Server Port
+
+```rust
+use Mist::dns_port;
+
+let Port = dns_port();
+println!("DNS server is on port: {}", Port);
+```
+
+### Creating a DNS Resolver
+
+```rust
+use Mist::resolver::{land_resolver, LandDnsResolver};
+
+// Simple resolver
+let Port = Mist::dns_port();
+let Resolver = land_resolver(Port);
+
+// Or with explicit interface
+let Resolver = LandDnsResolver::new(Port);
+```
+
+### Building a DNS Catalog
+
+```rust
+use Mist::server::build_catalog;
+
+let Catalog = build_catalog(5380)?;
+```
+
+---
+
+## Dependencies&#x2001;📦
+
+- **`hickory-server`** (`0.24`): DNS server implementation
+- **`hickory-proto`** (`0.24`): DNS protocol implementation
+- **`hickory-client`** (`0.24`): DNS client for resolvers
+- **`ring`** (`0.17`): Cryptographic signing for DNSSEC
+- **`tokio`** (`1.49`): Async runtime
+- **`anyhow`** (`1.0`): Error handling
+- **`tracing`** (`0.1`): Logging and instrumentation
+- **`once_cell`** (`1.21`): Thread-safe lazy initialization
+- **`portpicker`** (`0.1.1`): Random port selection
+- **`async-trait`** (`0.1`): Async trait support
+- **`reqwest`** (`0.13`): HTTP client with DNS integration
+
+---
+
+## Security Considerations&#x2001;🔒
+
+1.  **Private Network Isolation:** All `editor.land` domains resolve to
+    localhost, preventing any external network access for private services.
+2.  **Forward Allowlist:** External DNS queries are restricted to a trusted
+    allowlist, preventing sidecars from accessing arbitrary external hosts.
+3.  **DNSSEC:** Zone signing provides cryptographic assurance of DNS responses,
+    preventing DNS spoofing attacks.
+4.  **Loopback Binding:** The DNS server only binds to `127.0.0.1`, preventing
+    external access to the private DNS server.
+
+---
+
+## Integration with Land&#x2001;🔗
+
+**Mist** is integrated into the Land ecosystem:
+
+- **Mountain**: Starts the DNS server during application initialization and
+  provides the port to other components via the `DnsPort` managed state.
+- **Air**: Uses the DNS server for secure HTTP requests, configuring HTTP
+  clients to use the local DNS resolver.
+- **SideCar**: Spawns Node.js sidecars with DNS override configuration, ensuring
+  all DNS queries go through the local server.
+- **Cocoon**: The Node.js extension host can resolve `editor.land` domains via
+  the local DNS server for gRPC communication with Mountain.
+
+---
+
+## Building & Testing&#x2001;🔨
+
+```bash
+# Build the library
+cargo build --release
+
+# Run all tests
+cargo test
+
+# Run integration tests
+cargo test --test integration
+
+# Run with logging
+RUST_LOG=debug cargo test
+```
 
 ---
 
@@ -96,12 +301,32 @@ CC0 1.0 Universal. Public domain. No restrictions.
 - [Why Rust](https://editor.land/Doc/why-rust)
 - [Mountain](https://github.com/CodeEditorLand/Mountain)
 
+---
 
-## Funding & Acknowledgements 🙏🏻
+## License&#x2001;⚖️
 
-Code Editor Land is funded through the NGI0 Commons Fund, established by NLnet
-with financial support from the European Commission's Next Generation Internet
-programme, under grant agreement No. 101135429.
+This project is released into the public domain under the **Creative Commons CC0
+Universal** license. You are free to use, modify, distribute, and build upon
+this work for any purpose, without any restrictions. For the full legal text,
+see the [`LICENSE`](https://github.com/CodeEditorLand/Mist/tree/Current/) file.
+
+---
+
+## Changelog&#x2001;📜
+
+Stay updated with our progress! See
+[`CHANGELOG.md`](https://github.com/CodeEditorLand/Mist/tree/Current/) for a
+history of changes specific to **Mist**.
+
+---
+
+## Funding \& Acknowledgements&#x2001;🙏🏻
+
+**Mist** is a core element of the **Land** ecosystem. This project is funded
+through [NGI0 Commons Fund](https://NLnet.NL/commonsfund), a fund established by
+[NLnet](https://NLnet.NL) with financial support from the European Commission's
+[Next Generation Internet](https://ngi.eu) program. Learn more at the
+[NLnet project page](https://NLnet.NL/project/Land).
 
 The project is operated by PlayForm, based in Sofia, Bulgaria.
 

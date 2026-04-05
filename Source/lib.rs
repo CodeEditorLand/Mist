@@ -109,25 +109,13 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// use Mist::start;
 ///
 /// #[tokio::main]
-/// ```rust,no_run
-/// use Mist::start;
-///
-/// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
 ///     // Start DNS server, preferring port 5353
 ///     let port = start(5353)?;
-///
 ///     println!("DNS server started on port {}", port);
-///
-///     // DNS queries to editor.land will now resolve locally
-///     // The server continues running in the background
-///
-///     // Keep the application running
 ///     tokio::signal::ctrl_c().await?;
-///
 ///     Ok(())
 /// }
-/// ```
 /// ```
 pub fn start(preferred_port: u16) -> Result<u16> {
 	// Step 1: Find an available port using portpicker

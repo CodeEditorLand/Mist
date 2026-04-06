@@ -9,7 +9,7 @@
 			</h3>
 		</td>
 		<td align="left" valign="middle">
-			<h3 align="left"> + </h3>
+			<h3 align="left"> + </h3>
 		</td>
 		<td align="left" valign="middle">
 			<h3 align="left">
@@ -33,7 +33,7 @@
 			<h3 align="left"> 🏞️</h3>
 		</td>
 		<td align="left" valign="middle">
-			<h3 align="left"> + </h3>
+			<h3 align="left"> + </h3>
 		</td>
 		<td align="left" valign="middle" width="190">
 			<h3 align="left">
@@ -132,7 +132,7 @@ private network communication remains local and secure.
 │  │  └────────────────────┘  └──────────────────────┘        │  │
 │  └──────────────────────────────────────────────────────────┘  │
 │                                                                │
-│  Hickory DNS Server Core (UDP + TCP)                           │
+│  Hickory DNS Server Core (UDP + TCP)                           │
 │  - Request parsing and response construction                   │
 │  - Zone lookup and record matching                             │
 │  - DNSSEC signature verification                               │

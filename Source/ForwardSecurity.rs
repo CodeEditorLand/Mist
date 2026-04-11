@@ -14,7 +14,7 @@
 //!        Return REFUSED
 //! ```
 
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 use hickory_proto::rr::Name;
 
 /// Returns the default DNS forward allowlist.
@@ -33,8 +33,7 @@ mod tests {
 
 	#[test]
 	fn TestAllowlistGeneration() {
-		let Allowlist: Vec<Name> =
-			DefaultForwardAllowlist().filter_map(|R| R.ok()).collect();
+		let Allowlist:Vec<Name> = DefaultForwardAllowlist().filter_map(|R| R.ok()).collect();
 		assert!(!Allowlist.is_empty(), "Allowlist should not be empty");
 	}
 }

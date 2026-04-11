@@ -170,7 +170,7 @@ All subdomains of `editor.land` resolve to `127.0.0.1`:
 
 Only allowlisted external domains can be resolved:
 
-- `update.editor.land` — For application updates
+- `update.editor.land` - For application updates
 
 All other external queries are refused by default.
 

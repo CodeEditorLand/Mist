@@ -21,18 +21,12 @@ use tokio::net::UdpSocket;
 ///
 /// Creates a catalog with an authoritative zone for `editor.land` that
 /// resolves all queries locally to loopback addresses.
-pub fn BuildCatalog(_DNSPort: u16) -> Result<Catalog> {
+pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 	let mut Catalog = Catalog::new();
 
-	let EditorLandOrigin =
-		hickory_proto::rr::Name::from_ascii("editor.land.").unwrap();
+	let EditorLandOrigin = hickory_proto::rr::Name::from_ascii("editor.land.").unwrap();
 
-	let Authority = InMemoryAuthority::empty(
-		EditorLandOrigin.clone(),
-		ZoneType::Primary,
-		false,
-		None,
-	);
+	let Authority = InMemoryAuthority::empty(EditorLandOrigin.clone(), ZoneType::Primary, false, None);
 
 	let EditorLandLower = hickory_proto::rr::LowerName::from(&EditorLandOrigin);
 	let AuthorityArc = Arc::new(Authority);
@@ -45,17 +39,16 @@ pub fn BuildCatalog(_DNSPort: u16) -> Result<Catalog> {
 ///
 /// Binds to `127.0.0.1:{Port}` for both UDP and TCP. Validates that the
 /// socket is bound to a loopback address before accepting connections.
-pub async fn Serve(Catalog: Catalog, Port: u16) -> Result<()> {
-	let Address: SocketAddr =
-		SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), Port);
+pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
+	let Address:SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), Port);
 
 	let BindingIP = Address.ip();
 	match BindingIP {
 		IpAddr::V4(IP) => {
 			if !IP.is_loopback() {
 				return Err(anyhow::anyhow!(
-					"SECURITY: DNS server attempted to bind to non-loopback address: {}. \
-					 Only 127.x.x.x addresses are allowed.",
+					"SECURITY: DNS server attempted to bind to non-loopback address: {}. Only 127.x.x.x addresses are \
+					 allowed.",
 					IP
 				));
 			}
@@ -63,8 +56,7 @@ pub async fn Serve(Catalog: Catalog, Port: u16) -> Result<()> {
 		IpAddr::V6(IP) if IP.is_loopback() => {},
 		_ => {
 			return Err(anyhow::anyhow!(
-				"SECURITY: DNS server attempted to bind to invalid address: {}. \
-				 Only loopback addresses are allowed.",
+				"SECURITY: DNS server attempted to bind to invalid address: {}. Only loopback addresses are allowed.",
 				BindingIP
 			));
 		},
@@ -72,17 +64,13 @@ pub async fn Serve(Catalog: Catalog, Port: u16) -> Result<()> {
 
 	tracing::info!("Binding DNS server to loopback address: {}", Address);
 
-	let UDPSocket = UdpSocket::bind(Address).await.map_err(|E| {
-		anyhow::anyhow!(
-			"SECURITY: Failed to bind DNS server to {}: {}.",
-			Address,
-			E
-		)
-	})?;
+	let UDPSocket = UdpSocket::bind(Address)
+		.await
+		.map_err(|E| anyhow::anyhow!("SECURITY: Failed to bind DNS server to {}: {}.", Address, E))?;
 
-	let BoundAddress = UDPSocket.local_addr().map_err(|E| {
-		anyhow::anyhow!("SECURITY: Failed to retrieve bound socket address: {}", E)
-	})?;
+	let BoundAddress = UDPSocket
+		.local_addr()
+		.map_err(|E| anyhow::anyhow!("SECURITY: Failed to retrieve bound socket address: {}", E))?;
 
 	if !BoundAddress.ip().is_loopback() {
 		return Err(anyhow::anyhow!(
@@ -98,9 +86,9 @@ pub async fn Serve(Catalog: Catalog, Port: u16) -> Result<()> {
 		.await
 		.map_err(|E| anyhow::anyhow!("SECURITY: Failed to bind TCP listener to {}: {}", Address, E))?;
 
-	let TCPBoundAddress = TCPListener.local_addr().map_err(|E| {
-		anyhow::anyhow!("SECURITY: Failed to retrieve TCP listener bound address: {}", E)
-	})?;
+	let TCPBoundAddress = TCPListener
+		.local_addr()
+		.map_err(|E| anyhow::anyhow!("SECURITY: Failed to retrieve TCP listener bound address: {}", E))?;
 
 	if !TCPBoundAddress.ip().is_loopback() {
 		return Err(anyhow::anyhow!(
@@ -111,11 +99,7 @@ pub async fn Serve(Catalog: Catalog, Port: u16) -> Result<()> {
 
 	Server.register_listener(TCPListener, std::time::Duration::from_secs(5));
 
-	tracing::info!(
-		"DNS server bound to loopback: UDP={}, TCP={}",
-		BoundAddress,
-		TCPBoundAddress
-	);
+	tracing::info!("DNS server bound to loopback: UDP={}, TCP={}", BoundAddress, TCPBoundAddress);
 
 	match Server.block_until_done().await {
 		Ok(_) => {
@@ -131,7 +115,7 @@ pub async fn Serve(Catalog: Catalog, Port: u16) -> Result<()> {
 }
 
 /// Serves DNS queries synchronously (blocking convenience wrapper).
-pub fn ServeSync(Catalog: Catalog, Port: u16) -> Result<()> {
+pub fn ServeSync(Catalog:Catalog, Port:u16) -> Result<()> {
 	let Runtime = tokio::runtime::Runtime::new()?;
 	Runtime.block_on(Serve(Catalog, Port))?;
 	Ok(())
@@ -139,18 +123,16 @@ pub fn ServeSync(Catalog: Catalog, Port: u16) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use hickory_proto::rr::Name;
 
+	use super::*;
+
 	#[test]
-	fn TestBuildCatalog() {
-		let _Catalog = BuildCatalog(5353).expect("Failed to build catalog");
-	}
+	fn TestBuildCatalog() { let _Catalog = BuildCatalog(5353).expect("Failed to build catalog"); }
 
 	#[test]
 	fn TestSocketAddressIsLoopback() {
-		let Address: SocketAddr =
-			SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 5353);
+		let Address:SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 5353);
 		assert!(Address.ip().is_loopback());
 	}
 }

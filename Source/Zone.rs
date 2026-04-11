@@ -2,7 +2,8 @@
 //! # DNS Zone
 //!
 //! Provides DNS zone configuration for the CodeEditorLand private network.
-//! Creates an authoritative zone for `editor.land` that resolves to loopback addresses.
+//! Creates an authoritative zone for `editor.land` that resolves to loopback
+//! addresses.
 
 use anyhow::Result;
 use hickory_proto::rr::{
@@ -11,8 +12,7 @@ use hickory_proto::rr::{
 	Record,
 	rdata::{A, NS, SOA},
 };
-use hickory_server::authority::ZoneType;
-use hickory_server::store::in_memory::InMemoryAuthority;
+use hickory_server::{authority::ZoneType, store::in_memory::InMemoryAuthority};
 
 /// Creates the `editor.land` authoritative zone records.
 ///
@@ -23,10 +23,10 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	let TTL = 300u32;
 
 	let Serial = 2025010100u32;
-	let Refresh: i32 = 86400;
-	let Retry: i32 = 7200;
-	let Expire: i32 = 604800;
-	let Minimum: u32 = 3600;
+	let Refresh:i32 = 86400;
+	let Retry:i32 = 7200;
+	let Expire:i32 = 604800;
+	let Minimum:u32 = 3600;
 
 	let SOARecord = SOA::new(
 		Name::from_ascii("ns1.editor.land.").unwrap(),
@@ -40,11 +40,7 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	Records.push(Record::from_rdata(Origin.clone(), TTL, RData::SOA(SOARecord)));
 
 	let NSName = Name::from_ascii("ns1.editor.land.").unwrap();
-	Records.push(Record::from_rdata(
-		Origin.clone(),
-		TTL,
-		RData::NS(NS(NSName)),
-	));
+	Records.push(Record::from_rdata(Origin.clone(), TTL, RData::NS(NS(NSName))));
 
 	Records.push(Record::from_rdata(
 		Name::from_ascii("ns1.editor.land.").unwrap(),
@@ -54,8 +50,7 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 
 	let Subdomains = vec!["editor", "www", "localhost", "sidecar", "cocoon"];
 	for (Index, Subdomain) in Subdomains.iter().enumerate() {
-		let SubdomainName =
-			Name::from_ascii(format!("{}.editor.land.", Subdomain)).unwrap();
+		let SubdomainName = Name::from_ascii(format!("{}.editor.land.", Subdomain)).unwrap();
 		let IP = A::new(127, 0, (Index / 255) as u8, (Index % 255) as u8);
 		Records.push(Record::from_rdata(SubdomainName, TTL, RData::A(IP)));
 	}
@@ -74,16 +69,16 @@ pub fn EditorLandAuthority() -> Result<InMemoryAuthority> {
 }
 
 /// Creates an `InMemoryAuthority` for a custom origin with specified records.
-pub fn CustomAuthority(Origin: &Name, _Records: Vec<Record>) -> Result<InMemoryAuthority> {
-	let Authority =
-		InMemoryAuthority::empty(Origin.clone(), ZoneType::Primary, false, None);
+pub fn CustomAuthority(Origin:&Name, _Records:Vec<Record>) -> Result<InMemoryAuthority> {
+	let Authority = InMemoryAuthority::empty(Origin.clone(), ZoneType::Primary, false, None);
 	Ok(Authority)
 }
 
 #[cfg(test)]
 mod tests {
-	use super::*;
 	use hickory_server::authority::Authority;
+
+	use super::*;
 
 	#[test]
 	fn TestZoneCreation() {

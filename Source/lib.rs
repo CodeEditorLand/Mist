@@ -1,6 +1,5 @@
 //! # Mist: Private DNS for Local-First Networking
 #![allow(clippy::tabs_in_doc_comments, clippy::unnecessary_lazy_evaluations)]
-//!
 //! Mist gives Land its own private DNS so editor components can find each
 //! other on `*.editor.land` without touching the public internet. All queries
 //! resolve to `127.0.0.1`. No external DNS leaks, no configuration needed.
@@ -110,14 +109,14 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-///     // Start DNS server, preferring port 5353
-///     let port = start(5353)?;
-///     println!("DNS server started on port {}", port);
-///     tokio::signal::ctrl_c().await?;
-///     Ok(())
+/// 	// Start DNS server, preferring port 5353
+/// 	let port = start(5353)?;
+/// 	println!("DNS server started on port {}", port);
+/// 	tokio::signal::ctrl_c().await?;
+/// 	Ok(())
 /// }
 /// ```
-pub fn start(preferred_port: u16) -> Result<u16> {
+pub fn start(preferred_port:u16) -> Result<u16> {
 	// Step 1: Find an available port using portpicker
 	// Try the preferred port first, then pick a random available one
 	let port = portpicker::pick_unused_port()

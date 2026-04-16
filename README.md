@@ -37,12 +37,8 @@
 		</td>
 		<td align="left" valign="middle" width="190">
 			<h3 align="left">
-				<a href="https://Hickory-DNS.rs" target="_blank">
-					<picture>
-						<source media="(prefers-color-scheme: dark)" srcset="https://PlayForm.Cloud/Dark/Image/GitHub/Made/HickoryDNS.svg">
-						<source media="(prefers-color-scheme: light)" srcset="https://PlayForm.Cloud/Image/GitHub/Made/HickoryDNS.svg">
-						<img width="160" alt="Made With Hickory DNS" src="https://PlayForm.Cloud/Image/GitHub/Made/HickoryDNS.svg">
-					</picture>
+				<a href="https://hickory-dns.org" target="_blank">
+					<img width="160" alt="Made With Hickory DNS" src="https://avatars.githubusercontent.com/u/133828474?v=4">
 				</a>
 			</h3>
 		</td>
@@ -62,7 +58,7 @@ DNS Isolation for the editor.land Private Network
 _"Nothing leaks to the public internet. A clean network boundary between the
 editor and the outside world."_
 
-[![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](../../LICENSE)
+[![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Land/tree/Current/LICENSE)
 [<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
 [![Hickory DNS Version](https://img.shields.io/badge/Hickory_v0.24-blue.svg)](https://github.com/hickory-dns/hickory-dns)
 

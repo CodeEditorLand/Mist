@@ -7,7 +7,7 @@ license-file = "LICENSE"
 publish = false
 
 [lib]
-name = "mist"
+name = "Mist"
 path = "Source/lib.rs"
 
 [dependencies]

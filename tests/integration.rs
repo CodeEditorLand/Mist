@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use Mist::{dns_port, server::build_catalog};
+use Mist::{dns_port, Server, Zone, Resolver, ForwardSecurity};
 use hickory_proto::rr::RData;
 
 /// Test DNS server startup
@@ -51,7 +51,7 @@ fn test_dns_server_loopback_binding() {
 /// Test zone creation
 #[test]
 fn test_zone_creation() {
-	let zone = Mist::zone::editor_land_zone();
+	let zone = Zone::editor_land_zone();
 	assert!(zone.is_ok(), "Should be able to create zone");
 
 	let zone_records = zone.expect("Zone should be created");
@@ -63,7 +63,7 @@ fn test_zone_creation() {
 /// Test authority creation
 #[test]
 fn test_authority_creation() {
-	let authority = Mist::zone::editor_land_authority();
+	let authority = Zone::editor_land_authority();
 	assert!(authority.is_ok(), "Should be able to create authority");
 
 	let _authority = authority.expect("Authority should be created");
@@ -75,7 +75,7 @@ fn test_authority_creation() {
 #[test]
 fn test_resolver_creation() {
 	let port = 15400;
-	let resolver = Mist::resolver::land_resolver(port);
+	let resolver = Resolver::land_resolver(port);
 
 	// Just verify creation works - the resolver is a stub
 	let _ = resolver;
@@ -87,7 +87,7 @@ fn test_resolver_creation() {
 #[test]
 fn test_land_dns_resolver_creation() {
 	let port = 15401;
-	let resolver = Mist::resolver::LandDnsResolver::new(port);
+	let resolver = Resolver::LandDnsResolver::new(port);
 
 	// Just verify creation works - the resolver is a stub
 	let _ = resolver;

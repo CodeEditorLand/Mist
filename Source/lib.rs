@@ -1,5 +1,4 @@
 //! # Mist: Private DNS for Local-First Networking
-#![allow(clippy::tabs_in_doc_comments, clippy::unnecessary_lazy_evaluations)]
 //! Mist gives Land its own private DNS so editor components can find each
 //! other on `*.editor.land` without touching the public internet. All queries
 //! resolve to `127.0.0.1`. No external DNS leaks, no configuration needed.
@@ -30,6 +29,8 @@
 //! 	Ok(())
 //! }
 //! ```
+
+#![allow(clippy::tabs_in_doc_comments, clippy::unnecessary_lazy_evaluations)]
 
 use std::thread;
 

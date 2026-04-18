@@ -13,6 +13,7 @@ use hickory_proto::rr::RData;
 async fn test_dns_server_startup() {
 	// Start DNS server on a random port
 	let port = Mist::start(15353).expect("Failed to start DNS server");
+	// Need to call start before dns_port is available
 	assert_eq!(dns_port(), port);
 
 	// Verify port is in valid range
@@ -98,7 +99,7 @@ fn test_land_dns_resolver_creation() {
 /// Test allowlist generation
 #[test]
 fn test_allowlist_generation() {
-	let allowlist = Mist::forward_security::default_forward_allowlist();
+	let allowlist = ForwardSecurity::default_forward_allowlist();
 
 	let domains:Vec<_> = allowlist.filter_map(|r| r.ok()).collect();
 
@@ -123,7 +124,7 @@ fn test_multiple_dns_servers() {
 /// Test zone record types
 #[test]
 fn test_zone_record_types() {
-	let zone = Mist::zone::editor_land_zone().expect("Failed to create zone");
+	let zone = Zone::editor_land_zone().expect("Failed to create zone");
 
 	// Check for SOA record
 	let has_soa = zone.iter().any(|r| matches!(r.data(), RData::SOA(_)));
@@ -143,7 +144,7 @@ fn test_zone_record_types() {
 /// Test loopback resolution
 #[test]
 fn test_loopback_resolution() {
-	let zone = Mist::zone::editor_land_zone().expect("Failed to create zone");
+	let zone = Zone::editor_land_zone().expect("Failed to create zone");
 
 	// Check that all A records resolve to 127.x.x.x
 	for record in &zone {

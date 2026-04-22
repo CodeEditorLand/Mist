@@ -3,11 +3,11 @@
 All notable changes to the Mist element are documented in this file. Format:
 [Keep a Changelog](https://keepachangelog.com/).
 
-Mist is the DNS sandbox — a security-hardened local DNS resolver that provides
+Mist is the DNS sandbox - a security-hardened local DNS resolver that provides
 isolation for extension network requests, preventing direct host DNS queries and
 enabling per-extension domain allowlists.
 
-## [v2.1] — Q2 2026: Documentation + Formatting
+## [v2.1] - Q2 2026: Documentation + Formatting
 
 ### Changed
 
@@ -15,7 +15,7 @@ enabling per-extension domain allowlists.
 - `DeepDive.md` table formatting consistency improved
 - External links updated in Rust submodule README
 
-## [v2.0] — Q1 2026: DNS Module Maturation
+## [v2.0] - Q1 2026: DNS Module Maturation
 
 ### Added
 
@@ -28,7 +28,7 @@ enabling per-extension domain allowlists.
 - Cargo workspace integration as `Mist` member of Land root workspace
 - PascalCase naming enforced throughout source tree
 
-## [v1.2] — Q3-Q4 2025: Foundation Build
+## [v1.2] - Q3-Q4 2025: Foundation Build
 
 ### Added
 
@@ -37,7 +37,7 @@ enabling per-extension domain allowlists.
 - Security policy (SECURITY.md) and code of conduct
 - GitHub Actions CI/CD integration
 
-## [v1.1] — Q2 2025: Project Inception
+## [v1.1] - Q2 2025: Project Inception
 
 ### Added
 

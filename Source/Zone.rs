@@ -12,7 +12,16 @@ use hickory_proto::rr::{
 	Record,
 	rdata::{A, NS, SOA},
 };
-use hickory_server::{authority::ZoneType, store::in_memory::InMemoryAuthority};
+// hickory-server 0.26: see the block comment in `Server.rs` for the full
+// rename table (`authority::*` → `zone_handler::*`, `InMemoryAuthority` →
+// `InMemoryZoneHandler`, AXFR bool → `AxfrPolicy`). The handler became
+// generic over `P: RuntimeProvider`; we pin it to `TokioRuntimeProvider` so
+// return types are concrete and callers don't have to thread the parameter.
+use hickory_server::{
+	net::runtime::TokioRuntimeProvider,
+	store::in_memory::InMemoryZoneHandler,
+	zone_handler::{AxfrPolicy, ZoneType},
+};
 
 /// Creates the `editor.land` authoritative zone records.
 ///
@@ -60,23 +69,36 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	Ok(Records)
 }
 
-/// Creates an `InMemoryAuthority` for the `editor.land` zone.
-pub fn EditorLandAuthority() -> Result<InMemoryAuthority> {
+/// Creates an `InMemoryZoneHandler` for the `editor.land` zone.
+pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
 	let Origin = Name::from_ascii("editor.land.").unwrap();
-	let Authority = InMemoryAuthority::empty(Origin, ZoneType::Primary, false, None);
+	let Authority = InMemoryZoneHandler::<TokioRuntimeProvider>::empty(
+		Origin,
+		ZoneType::Primary,
+		AxfrPolicy::Deny,
+		None,
+	);
 	let _Records = EditorLandZone()?;
 	Ok(Authority)
 }
 
-/// Creates an `InMemoryAuthority` for a custom origin with specified records.
-pub fn CustomAuthority(Origin:&Name, _Records:Vec<Record>) -> Result<InMemoryAuthority> {
-	let Authority = InMemoryAuthority::empty(Origin.clone(), ZoneType::Primary, false, None);
+/// Creates an `InMemoryZoneHandler` for a custom origin with specified records.
+pub fn CustomAuthority(
+	Origin:&Name,
+	_Records:Vec<Record>,
+) -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
+	let Authority = InMemoryZoneHandler::<TokioRuntimeProvider>::empty(
+		Origin.clone(),
+		ZoneType::Primary,
+		AxfrPolicy::Deny,
+		None,
+	);
 	Ok(Authority)
 }
 
 #[cfg(test)]
 mod tests {
-	use hickory_server::authority::Authority;
+	use hickory_server::zone_handler::ZoneHandler;
 
 	use super::*;
 

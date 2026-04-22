@@ -10,12 +10,29 @@ use std::{
 };
 
 use anyhow::Result;
+// hickory-server 0.26 reorganisation:
+//   authority::*                       → zone_handler::*
+//   authority::Authority (trait)       → zone_handler::ZoneHandler
+//   authority::Catalog / ZoneType      → zone_handler::Catalog / ZoneType
+//   store::in_memory::InMemoryAuthority → store::in_memory::InMemoryZoneHandler
+//   server::ServerFuture               → Server (re-exported at crate root)
+//   InMemoryAuthority::empty(_,_,bool,_) → InMemoryZoneHandler::empty(_,_,AxfrPolicy,_)
+// The behaviour is unchanged; only names moved.
 use hickory_server::{
-	authority::{Catalog, ZoneType},
-	server::ServerFuture,
-	store::in_memory::InMemoryAuthority,
+	Server,
+	net::runtime::TokioRuntimeProvider,
+	store::in_memory::InMemoryZoneHandler,
+	zone_handler::{AxfrPolicy, Catalog, ZoneType},
 };
 use tokio::net::UdpSocket;
+
+/// Buffer capacity for outgoing DNS TCP responses per connection. 65 535 is
+/// the upper bound a single DNS message can reach over TCP (the 16-bit
+/// length prefix cap from RFC 1035 §4.2.2). Picking the cap avoids any
+/// truncation for zone-transfer or large TXT responses while staying well
+/// within memory for the dozen-or-so concurrent connections a local
+/// `editor.land` catalog ever sees.
+const DNS_TCP_RESPONSE_BUFFER_SIZE:usize = 65_535;
 
 /// Builds a DNS catalog for the CodeEditorLand private network.
 ///
@@ -26,7 +43,18 @@ pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 
 	let EditorLandOrigin = hickory_proto::rr::Name::from_ascii("editor.land.").unwrap();
 
-	let Authority = InMemoryAuthority::empty(EditorLandOrigin.clone(), ZoneType::Primary, false, None);
+	// `AxfrPolicy::Deny` replaces the old `false` bool that disabled AXFR.
+	// The trailing `None` is `Option<NxProofKind>` and remains dnssec-ring-gated.
+	// Turbofish pins the runtime provider so inference has a concrete type
+	// (the handler is generic over `P: RuntimeProvider`; there's no
+	// inference anchor without either an `.await`-driven callsite or an
+	// explicit parameter here).
+	let Authority = InMemoryZoneHandler::<TokioRuntimeProvider>::empty(
+		EditorLandOrigin.clone(),
+		ZoneType::Primary,
+		AxfrPolicy::Deny,
+		None,
+	);
 
 	let EditorLandLower = hickory_proto::rr::LowerName::from(&EditorLandOrigin);
 	let AuthorityArc = Arc::new(Authority);
@@ -79,7 +107,9 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 		));
 	}
 
-	let mut Server = ServerFuture::new(Catalog);
+	// `Server` supersedes `ServerFuture`; constructor + register_* + block_until_done
+	// signatures are the same so the rest of this body is unchanged.
+	let mut Server = Server::new(Catalog);
 	Server.register_socket(UDPSocket);
 
 	let TCPListener = tokio::net::TcpListener::bind(Address)
@@ -97,7 +127,11 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 		));
 	}
 
-	Server.register_listener(TCPListener, std::time::Duration::from_secs(5));
+	Server.register_listener(
+		TCPListener,
+		std::time::Duration::from_secs(5),
+		DNS_TCP_RESPONSE_BUFFER_SIZE,
+	);
 
 	tracing::info!("DNS server bound to loopback: UDP={}, TCP={}", BoundAddress, TCPBoundAddress);
 

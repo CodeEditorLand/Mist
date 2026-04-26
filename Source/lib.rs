@@ -1,3 +1,4 @@
+#![allow(non_snake_case)]
 //! # Mist: Private DNS for Local-First Networking
 //! Mist gives Land its own private DNS so editor components can find each
 //! other on `*.editor.land` without touching the public internet. All queries

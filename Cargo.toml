@@ -16,6 +16,12 @@ hickory-proto = { workspace = true, features = ["dnssec-ring"] }
 hickory-client = { workspace = true }
 ring = { workspace = true }
 tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+futures-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+hex = { workspace = true }
+rand = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 once_cell = { workspace = true }

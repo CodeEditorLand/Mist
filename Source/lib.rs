@@ -43,6 +43,8 @@ pub mod Server;
 pub mod Zone;
 pub mod Resolver;
 pub mod ForwardSecurity;
+// LAND-PATCH B7-S6 P1: WebSocket transport for the Sky↔Cocoon
+pub mod WebSocket;
 
 /// Global DNS port number.
 ///

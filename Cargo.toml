@@ -28,6 +28,7 @@ once_cell = { workspace = true }
 portpicker = { workspace = true }
 async-trait = { workspace = true }
 reqwest = { workspace = true }
+Common = { workspace = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }

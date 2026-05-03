@@ -124,6 +124,16 @@ pub async fn ServeLocal(Port:u16, Secret:SharedSecret, Registry:Arc<HandlerRegis
 	let Address = format!("127.0.0.1:{}", Port);
 	let Listener = TcpListener::bind(&Address).await?;
 	tracing::info!(target: "Mist::WebSocket", "server listening on {}", Address);
+
+	// Telemetry: one `land:mist:server:start` per Mist server bind.
+	// Tier inherited from the parent process (Mountain or Air, both
+	// link Mist). No-op in release / when `Capture=false`.
+	let PortStr = format!("{}", Port);
+	CommonLibrary::Telemetry::CaptureEvent::Fn(
+		"land:mist:server:start",
+		Some(vec![("address", Address.as_str()), ("port", PortStr.as_str())]),
+	);
+
 	loop {
 		let (Stream, Peer) = match Listener.accept().await {
 			Ok(P) => P,

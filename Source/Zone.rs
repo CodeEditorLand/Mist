@@ -72,27 +72,16 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 /// Creates an `InMemoryZoneHandler` for the `editor.land` zone.
 pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
 	let Origin = Name::from_ascii("editor.land.").unwrap();
-	let Authority = InMemoryZoneHandler::<TokioRuntimeProvider>::empty(
-		Origin,
-		ZoneType::Primary,
-		AxfrPolicy::Deny,
-		None,
-	);
+	let Authority =
+		InMemoryZoneHandler::<TokioRuntimeProvider>::empty(Origin, ZoneType::Primary, AxfrPolicy::Deny, None);
 	let _Records = EditorLandZone()?;
 	Ok(Authority)
 }
 
 /// Creates an `InMemoryZoneHandler` for a custom origin with specified records.
-pub fn CustomAuthority(
-	Origin:&Name,
-	_Records:Vec<Record>,
-) -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
-	let Authority = InMemoryZoneHandler::<TokioRuntimeProvider>::empty(
-		Origin.clone(),
-		ZoneType::Primary,
-		AxfrPolicy::Deny,
-		None,
-	);
+pub fn CustomAuthority(Origin:&Name, _Records:Vec<Record>) -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
+	let Authority =
+		InMemoryZoneHandler::<TokioRuntimeProvider>::empty(Origin.clone(), ZoneType::Primary, AxfrPolicy::Deny, None);
 	Ok(Authority)
 }
 

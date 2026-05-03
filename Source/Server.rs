@@ -107,8 +107,9 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 		));
 	}
 
-	// `Server` supersedes `ServerFuture`; constructor + register_* + block_until_done
-	// signatures are the same so the rest of this body is unchanged.
+	// `Server` supersedes `ServerFuture`; constructor + register_* +
+	// block_until_done signatures are the same so the rest of this body is
+	// unchanged.
 	let mut Server = Server::new(Catalog);
 	Server.register_socket(UDPSocket);
 
@@ -127,11 +128,7 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 		));
 	}
 
-	Server.register_listener(
-		TCPListener,
-		std::time::Duration::from_secs(5),
-		DNS_TCP_RESPONSE_BUFFER_SIZE,
-	);
+	Server.register_listener(TCPListener, std::time::Duration::from_secs(5), DNS_TCP_RESPONSE_BUFFER_SIZE);
 
 	tracing::info!("DNS server bound to loopback: UDP={}, TCP={}", BoundAddress, TCPBoundAddress);
 

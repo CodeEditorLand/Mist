@@ -5,7 +5,7 @@
 
 use std::time::Duration;
 
-use Mist::{dns_port, Server, Zone, Resolver, ForwardSecurity};
+use Mist::{ForwardSecurity, Resolver, Server, Zone, dns_port};
 use hickory_proto::rr::RData;
 
 /// Test DNS server startup

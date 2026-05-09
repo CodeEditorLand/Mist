@@ -84,11 +84,15 @@ impl SharedSecret {
 
 	pub fn from_hex(Hex:&str) -> Result<Self> {
 		let Bytes = hex::decode(Hex)?;
+
 		if Bytes.len() != 32 {
 			anyhow::bail!("shared secret must be 32 bytes (got {})", Bytes.len());
 		}
+
 		let mut Out = [0u8; 32];
+
 		Out.copy_from_slice(&Bytes);
+
 		Ok(Self(Out))
 	}
 }
@@ -122,13 +126,16 @@ impl HandlerRegistry {
 /// listener).
 pub async fn ServeLocal(Port:u16, Secret:SharedSecret, Registry:Arc<HandlerRegistry>) -> Result<()> {
 	let Address = format!("127.0.0.1:{}", Port);
+
 	let Listener = TcpListener::bind(&Address).await?;
+
 	tracing::info!(target: "Mist::WebSocket", "server listening on {}", Address);
 
 	// Telemetry: one `land:mist:server:start` per Mist server bind.
 	// Tier inherited from the parent process (Mountain or Air, both
 	// link Mist). No-op in release / when `Capture=false`.
 	let PortStr = format!("{}", Port);
+
 	CommonLibrary::Telemetry::CaptureEvent::Fn(
 		"land:mist:server:start",
 		Some(vec![("address", Address.as_str()), ("port", PortStr.as_str())]),
@@ -137,13 +144,18 @@ pub async fn ServeLocal(Port:u16, Secret:SharedSecret, Registry:Arc<HandlerRegis
 	loop {
 		let (Stream, Peer) = match Listener.accept().await {
 			Ok(P) => P,
+
 			Err(Error) => {
 				tracing::warn!(target: "Mist::WebSocket", "accept error: {}", Error);
+
 				continue;
 			},
 		};
+
 		let SecretClone = Secret.clone();
+
 		let RegistryClone = Registry.clone();
+
 		tokio::spawn(async move {
 			if let Err(Error) = HandleConnection(Stream, SecretClone, RegistryClone).await {
 				tracing::warn!(target: "Mist::WebSocket", "connection from {} closed with error: {}", Peer, Error);
@@ -160,13 +172,16 @@ async fn HandleConnection(Stream:TcpStream, _Secret:SharedSecret, Registry:Arc<H
 	// works without auth (loopback-only listener; the practical
 	// attack surface today is "another local process").
 	let WebSocketStream = accept_async(Stream).await?;
+
 	let (mut Sink, mut Source) = WebSocketStream.split();
 
 	while let Some(MessageResult) = Source.next().await {
 		let Message = match MessageResult {
 			Ok(M) => M,
+
 			Err(Error) => {
 				tracing::debug!(target: "Mist::WebSocket", "frame read error: {}", Error);
+
 				break;
 			},
 		};
@@ -175,13 +190,18 @@ async fn HandleConnection(Stream:TcpStream, _Secret:SharedSecret, Registry:Arc<H
 			Message::Text(Text) => {
 				let Envelope:Value = match serde_json::from_str(&Text) {
 					Ok(V) => V,
+
 					Err(Error) => {
 						tracing::debug!(target: "Mist::WebSocket", "bad text frame: {}", Error);
+
 						continue;
 					},
 				};
+
 				let Method = Envelope.get("method").and_then(|V| V.as_str()).unwrap_or("");
+
 				let Identifier = Envelope.get("id").cloned().unwrap_or(Value::Null);
+
 				let Params = Envelope.get("params").cloned().unwrap_or(Value::Array(vec![]));
 
 				if Method.is_empty() {
@@ -189,13 +209,16 @@ async fn HandleConnection(Stream:TcpStream, _Secret:SharedSecret, Registry:Arc<H
 				}
 
 				let Handler = Registry.Lookup(Method).await;
+
 				let Response = match Handler {
 					Some(H) => {
 						match H(Params).await {
 							Ok(Value) => serde_json::json!({ "id": Identifier, "result": Value }),
+
 							Err(ErrorMessage) => serde_json::json!({ "id": Identifier, "error": ErrorMessage }),
 						}
 					},
+
 					None => {
 						serde_json::json!({
 							"id": Identifier,
@@ -211,16 +234,21 @@ async fn HandleConnection(Stream:TcpStream, _Secret:SharedSecret, Registry:Arc<H
 
 				if let Err(Error) = Sink.send(Message::Text(Utf8Bytes::from(Response.to_string()))).await {
 					tracing::debug!(target: "Mist::WebSocket", "send error: {}", Error);
+
 					break;
 				}
 			},
+
 			Message::Binary(Bytes) => {
 				tracing::trace!(target: "Mist::WebSocket", "binary frame ({} bytes) ignored - reserved for phase 2", Bytes.len());
 			},
+
 			Message::Close(_) => break,
+
 			_ => {},
 		}
 	}
+
 	Ok(())
 }
 
@@ -234,8 +262,11 @@ pub struct Client {
 	// (the TLS wrapper is a no-op when the URL is `ws://` rather than
 	// `wss://`, but the type still has to thread through).
 	Sink:Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>>>,
+
 	Pending:PendingMap,
+
 	NextIdentifier:AtomicU64,
+
 	Closed:AtomicBool,
 }
 
@@ -246,9 +277,13 @@ impl Client {
 	/// requests.
 	pub async fn connect(Address:&str) -> Result<Arc<Self>> {
 		let (Stream, _Response) = connect_async(Address).await?;
+
 		let (Sink, mut Source) = Stream.split();
+
 		let Sink = Arc::new(Mutex::new(Sink));
+
 		let Pending:PendingMap = Arc::new(Mutex::new(HashMap::new()));
+
 		let SelfReference = Arc::new(Self {
 			Sink,
 			Pending:Pending.clone(),
@@ -259,6 +294,7 @@ impl Client {
 		// Reader task: drains incoming frames and resolves pending
 		// request senders by id.
 		let SelfForReader = SelfReference.clone();
+
 		tokio::spawn(async move {
 			while let Some(MessageResult) = Source.next().await {
 				let Frame = match MessageResult {
@@ -304,16 +340,25 @@ impl Client {
 		if self.Closed.load(Ordering::Relaxed) {
 			return Err("connection closed".into());
 		}
+
 		let Identifier = self.NextIdentifier.fetch_add(1, Ordering::Relaxed);
+
 		let (Tx, Rx) = oneshot::channel();
+
 		self.Pending.lock().await.insert(Identifier, Tx);
+
 		let Envelope = serde_json::json!({ "id": Identifier, "method": Method, "params": Params });
+
 		let Text = Envelope.to_string();
+
 		let SendResult = self.Sink.lock().await.send(Message::Text(Utf8Bytes::from(Text))).await;
+
 		if SendResult.is_err() {
 			self.Pending.lock().await.remove(&Identifier);
+
 			return Err("send failed".into());
 		}
+
 		Rx.await.map_err(|_| "request cancelled".to_string())?
 	}
 
@@ -322,8 +367,11 @@ impl Client {
 		if self.Closed.load(Ordering::Relaxed) {
 			return Err("connection closed".into());
 		}
+
 		let Envelope = serde_json::json!({ "id": Value::Null, "method": Method, "params": Params });
+
 		let Text = Envelope.to_string();
+
 		self.Sink
 			.lock()
 			.await

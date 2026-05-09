@@ -28,13 +28,19 @@ use hickory_server::{
 /// All `*.editor.land` domains resolve to `127.x.x.x` (loopback).
 pub fn EditorLandZone() -> Result<Vec<Record>> {
 	let mut Records = Vec::new();
+
 	let Origin = Name::from_ascii("editor.land.").unwrap();
+
 	let TTL = 300u32;
 
 	let Serial = 2025010100u32;
+
 	let Refresh:i32 = 86400;
+
 	let Retry:i32 = 7200;
+
 	let Expire:i32 = 604800;
+
 	let Minimum:u32 = 3600;
 
 	let SOARecord = SOA::new(
@@ -46,9 +52,11 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 		Expire,
 		Minimum,
 	);
+
 	Records.push(Record::from_rdata(Origin.clone(), TTL, RData::SOA(SOARecord)));
 
 	let NSName = Name::from_ascii("ns1.editor.land.").unwrap();
+
 	Records.push(Record::from_rdata(Origin.clone(), TTL, RData::NS(NS(NSName))));
 
 	Records.push(Record::from_rdata(
@@ -58,9 +66,12 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	));
 
 	let Subdomains = vec!["editor", "www", "localhost", "sidecar", "cocoon"];
+
 	for (Index, Subdomain) in Subdomains.iter().enumerate() {
 		let SubdomainName = Name::from_ascii(format!("{}.editor.land.", Subdomain)).unwrap();
+
 		let IP = A::new(127, 0, (Index / 255) as u8, (Index % 255) as u8);
+
 		Records.push(Record::from_rdata(SubdomainName, TTL, RData::A(IP)));
 	}
 
@@ -72,9 +83,12 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 /// Creates an `InMemoryZoneHandler` for the `editor.land` zone.
 pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
 	let Origin = Name::from_ascii("editor.land.").unwrap();
+
 	let Authority =
 		InMemoryZoneHandler::<TokioRuntimeProvider>::empty(Origin, ZoneType::Primary, AxfrPolicy::Deny, None);
+
 	let _Records = EditorLandZone()?;
+
 	Ok(Authority)
 }
 
@@ -82,11 +96,13 @@ pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>
 pub fn CustomAuthority(Origin:&Name, _Records:Vec<Record>) -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
 	let Authority =
 		InMemoryZoneHandler::<TokioRuntimeProvider>::empty(Origin.clone(), ZoneType::Primary, AxfrPolicy::Deny, None);
+
 	Ok(Authority)
 }
 
 #[cfg(test)]
 mod tests {
+
 	use hickory_server::zone_handler::ZoneHandler;
 
 	use super::*;
@@ -94,12 +110,14 @@ mod tests {
 	#[test]
 	fn TestZoneCreation() {
 		let Zone = EditorLandZone().expect("Failed to create zone");
+
 		assert!(!Zone.is_empty());
 	}
 
 	#[test]
 	fn TestZoneHasLoopbackRecords() {
 		let Zone = EditorLandZone().expect("Failed to create zone");
+
 		for Record in &Zone {
 			if let RData::A(IP) = Record.data() {
 				assert_eq!(IP.octets()[0], 127, "A record must resolve to 127.x.x.x");

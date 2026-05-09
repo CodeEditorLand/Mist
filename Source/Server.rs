@@ -57,7 +57,9 @@ pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 	);
 
 	let EditorLandLower = hickory_proto::rr::LowerName::from(&EditorLandOrigin);
+
 	let AuthorityArc = Arc::new(Authority);
+
 	Catalog.upsert(EditorLandLower, vec![AuthorityArc]);
 
 	Ok(Catalog)
@@ -71,6 +73,7 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 	let Address:SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), Port);
 
 	let BindingIP = Address.ip();
+
 	match BindingIP {
 		IpAddr::V4(IP) => {
 			if !IP.is_loopback() {
@@ -81,7 +84,9 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 				));
 			}
 		},
+
 		IpAddr::V6(IP) if IP.is_loopback() => {},
+
 		_ => {
 			return Err(anyhow::anyhow!(
 				"SECURITY: DNS server attempted to bind to invalid address: {}. Only loopback addresses are allowed.",
@@ -111,6 +116,7 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 	// block_until_done signatures are the same so the rest of this body is
 	// unchanged.
 	let mut Server = Server::new(Catalog);
+
 	Server.register_socket(UDPSocket);
 
 	let TCPListener = tokio::net::TcpListener::bind(Address)
@@ -135,11 +141,15 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 	match Server.block_until_done().await {
 		Ok(_) => {
 			tracing::info!("DNS server shutdown gracefully");
+
 			Ok(())
 		},
+
 		Err(E) => {
 			let ErrorMessage = format!("DNS server error: {:?}", E);
+
 			tracing::error!("{}", ErrorMessage);
+
 			Err(anyhow::anyhow!(ErrorMessage))
 		},
 	}
@@ -148,12 +158,15 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 /// Serves DNS queries synchronously (blocking convenience wrapper).
 pub fn ServeSync(Catalog:Catalog, Port:u16) -> Result<()> {
 	let Runtime = tokio::runtime::Runtime::new()?;
+
 	Runtime.block_on(Serve(Catalog, Port))?;
+
 	Ok(())
 }
 
 #[cfg(test)]
 mod tests {
+
 	use hickory_proto::rr::Name;
 
 	use super::*;
@@ -164,6 +177,7 @@ mod tests {
 	#[test]
 	fn TestSocketAddressIsLoopback() {
 		let Address:SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 5353);
+
 		assert!(Address.ip().is_loopback());
 	}
 }

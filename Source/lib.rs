@@ -40,9 +40,13 @@ use once_cell::sync::OnceCell;
 
 // Public module exports (PascalCase per project convention)
 pub mod Server;
+
 pub mod Zone;
+
 pub mod Resolver;
+
 pub mod ForwardSecurity;
+
 // LAND-PATCH B7-S6 P1: WebSocket transport for the Sky↔Cocoon
 pub mod WebSocket;
 
@@ -151,12 +155,14 @@ pub fn start(preferred_port:u16) -> Result<u16> {
 
 #[cfg(test)]
 mod tests {
+
 	use super::*;
 
 	#[test]
 	fn test_dns_port_initial_state() {
 		// Initially, DNS_PORT should be 0
 		let port = dns_port();
+
 		assert_eq!(port, 0);
 	}
 
@@ -174,10 +180,12 @@ mod tests {
 
 		// The port should be within valid range
 		assert!(port >= 1024, "Port should be >= 1024");
+
 		assert!(port <= 65535, "Port should be <= 65535");
 
 		// DNS_PORT should now return the same port
 		let retrieved_port = dns_port();
+
 		assert_eq!(port, retrieved_port, "DNS_PORT should match returned port");
 	}
 
@@ -185,21 +193,25 @@ mod tests {
 	fn test_start_fails_on_second_call() {
 		// Starting the server twice should fail
 		let port1 = start(15354);
+
 		assert!(port1.is_ok(), "First start should succeed");
 
 		let port2 = start(15355);
+
 		assert!(port2.is_err(), "Second start should fail");
 	}
 
 	#[test]
 	fn test_build_catalog_api() {
 		let catalog = Server::BuildCatalog(15356);
+
 		assert!(catalog.is_ok(), "Should be able to build catalog");
 	}
 
 	#[test]
 	fn test_build_zone_api() {
 		let zone = Zone::EditorLandZone();
+
 		assert!(zone.is_ok(), "Should be able to build zone");
 	}
 }

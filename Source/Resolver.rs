@@ -33,6 +33,7 @@ impl LandDnsResolver {
 impl reqwest::dns::Resolve for LandDnsResolver {
 	fn resolve(&self, Name:reqwest::dns::Name) -> reqwest::dns::Resolving {
 		let NameString = Name.as_str().to_string();
+
 		Box::pin(async move {
 			let IsEditorLand = NameString.ends_with(".editor.land") || NameString == "editor.land";
 			if IsEditorLand {
@@ -47,6 +48,7 @@ impl reqwest::dns::Resolve for LandDnsResolver {
 
 #[cfg(test)]
 mod tests {
+
 	use super::*;
 
 	#[test]
@@ -58,6 +60,7 @@ mod tests {
 	#[test]
 	fn TestEditorLandDomainDetection() {
 		assert!("example.editor.land".ends_with(".editor.land"));
+
 		assert!(!"example.com".ends_with(".editor.land"));
 	}
 }

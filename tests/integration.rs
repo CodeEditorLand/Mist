@@ -13,11 +13,13 @@ use hickory_proto::rr::RData;
 async fn test_dns_server_startup() {
 	// Start DNS server on a random port
 	let port = Mist::start(15353).expect("Failed to start DNS server");
+
 	// Need to call start before dns_port is available
 	assert_eq!(dns_port(), port);
 
 	// Verify port is in valid range
 	assert!(port >= 1024, "Port should be >= 1024");
+
 	assert!(port <= 65535, "Port should be <= 65535");
 
 	// Give server time to start
@@ -30,9 +32,11 @@ async fn test_dns_server_startup() {
 #[test]
 fn test_dns_catalog_building() {
 	let catalog = build_catalog(15356);
+
 	assert!(catalog.is_ok(), "Should be able to build catalog");
 
 	let _catalog = catalog.expect("Catalog should be created");
+
 	println!("DNS catalog built successfully");
 }
 
@@ -53,9 +57,11 @@ fn test_dns_server_loopback_binding() {
 #[test]
 fn test_zone_creation() {
 	let zone = Zone::editor_land_zone();
+
 	assert!(zone.is_ok(), "Should be able to create zone");
 
 	let zone_records = zone.expect("Zone should be created");
+
 	assert!(!zone_records.is_empty(), "Zone should contain records");
 
 	println!("Zone created successfully with {} records", zone_records.len());
@@ -65,6 +71,7 @@ fn test_zone_creation() {
 #[test]
 fn test_authority_creation() {
 	let authority = Zone::editor_land_authority();
+
 	assert!(authority.is_ok(), "Should be able to create authority");
 
 	let _authority = authority.expect("Authority should be created");
@@ -76,6 +83,7 @@ fn test_authority_creation() {
 #[test]
 fn test_resolver_creation() {
 	let port = 15400;
+
 	let resolver = Resolver::land_resolver(port);
 
 	// Just verify creation works - the resolver is a stub
@@ -88,6 +96,7 @@ fn test_resolver_creation() {
 #[test]
 fn test_land_dns_resolver_creation() {
 	let port = 15401;
+
 	let resolver = Resolver::LandDnsResolver::new(port);
 
 	// Just verify creation works - the resolver is a stub
@@ -104,6 +113,7 @@ fn test_allowlist_generation() {
 	let domains:Vec<_> = allowlist.filter_map(|r| r.ok()).collect();
 
 	assert!(!domains.is_empty(), "Allowlist should not be empty");
+
 	assert_eq!(domains.len(), 2, "Should have 2 domains in allowlist");
 
 	println!("Allowlist generated successfully: {:?}", domains);
@@ -114,6 +124,7 @@ fn test_allowlist_generation() {
 fn test_multiple_dns_servers() {
 	// Test building catalogs for multiple ports
 	let catalog1 = build_catalog(15390).expect("Failed to build first catalog");
+
 	let catalog2 = build_catalog(15391).expect("Failed to build second catalog");
 
 	let _ = (catalog1, catalog2);
@@ -128,14 +139,17 @@ fn test_zone_record_types() {
 
 	// Check for SOA record
 	let has_soa = zone.iter().any(|r| matches!(r.data(), RData::SOA(_)));
+
 	assert!(has_soa, "Zone should have SOA record");
 
 	// Check for NS record
 	let has_ns = zone.iter().any(|r| matches!(r.data(), RData::NS(_)));
+
 	assert!(has_ns, "Zone should have NS record");
 
 	// Check for A records
 	let has_a = zone.iter().any(|r| matches!(r.data(), RData::A(_)));
+
 	assert!(has_a, "Zone should have A records");
 
 	println!("Zone record types verified successfully");
@@ -150,6 +164,7 @@ fn test_loopback_resolution() {
 	for record in &zone {
 		if let RData::A(ip) = record.data() {
 			let octets = ip.octets();
+
 			assert_eq!(
 				octets[0],
 				127,

@@ -29,11 +29,13 @@ pub fn DefaultForwardAllowlist() -> impl Iterator<Item = Result<Name>> {
 
 #[cfg(test)]
 mod tests {
+
 	use super::*;
 
 	#[test]
 	fn TestAllowlistGeneration() {
 		let Allowlist:Vec<Name> = DefaultForwardAllowlist().filter_map(|R| R.ok()).collect();
+
 		assert!(!Allowlist.is_empty(), "Allowlist should not be empty");
 	}
 }

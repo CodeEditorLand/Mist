@@ -137,18 +137,14 @@ private network communication remains local and secure.
 
 ### Components
 
-- **`lib.rs`**: Main library entry point, exports public API and manages the DNS
-  server state.
-- **`server.rs`**: DNS server implementation using Hickory, handles UDP/TCP
-  listeners and catalog management.
-- **`zone.rs`**: DNS zone configuration for `editor.land`, including record
-  definitions and authority creation.
-- **`resolver.rs`**: DNS resolver for use by other components, provides
-  interface to the local DNS server.
-- **`forward_security.rs`**: Forward allowlist management, restricts which
-  external domains can be resolved.
-- **`tests/integration.rs`**: Comprehensive integration tests for DNS server
-  functionality.
+| File                 | Role                                                                       |
+| :------------------- | :------------------------------------------------------------------------- |
+| `lib.rs`             | Main library entry point, exports public `API` and manages DNS server state. |
+| `Server.rs`          | DNS server implementation using `Hickory`, handles `UDP`/`TCP` listeners and catalog management. |
+| `Zone.rs`            | DNS zone configuration for `editor.land`, including record definitions and authority creation. |
+| `Resolver.rs`        | DNS resolver for use by other components, provides interface to the local DNS server. |
+| `ForwardSecurity.rs` | Forward allowlist management, restricts which external domains can be resolved. |
+| `WebSocket.rs`       | WebSocket transport layer for real-time DNS data streaming.                |
 
 ---
 

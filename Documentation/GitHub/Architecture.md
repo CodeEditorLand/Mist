@@ -1,9 +1,11 @@
-# Mist: DNS Isolation Server
+# Mist: DNS Isolation Server 🌫️
 
-This document describes Mist, a local DNS server that provides network isolation
-for Land's sidecar processes. Mist runs an authoritative DNS server for the
-`editor.land` zone, resolving all subdomains to `127.0.0.1`, and implements
-forward allowlisting for controlled external domain access.
+This document describes `Mist`, a local DNS server that provides network
+isolation for `Land`'s sidecar processes:
+
+- Runs an authoritative DNS server for the `editor.land` zone
+- Resolves all subdomains to `127.0.0.1`
+- Implements forward allowlisting for controlled external domain access
 
 ---
 
@@ -41,25 +43,27 @@ graph TB
     ZONE -->|"NXDOMAIN"| BLOCKED["Blocked domains"]
 ```
 
-## Overview
+## Overview 📋
 
-Mist runs a local Hickory DNS server authoritative for the `editor.land` zone on
-loopback (port 5380). It provides network isolation for sidecar processes
-(Cocoon, Air, Grove) by preventing them from resolving arbitrary external hosts
-without explicit allowlisting.
+`Mist` runs a local `Hickory DNS` server authoritative for the `editor.land`
+zone on loopback (port 5380):
 
-| Attribute    | Value                                         |
-| ------------ | --------------------------------------------- |
-| Language     | Rust (edition 2024)                           |
-| Crate type   | Library + Binary                              |
-| DNS library  | hickory-server, hickory-proto, hickory-client |
-| Port         | 5380 (UDP + TCP)                              |
-| Dependencies | Common, ring, tokio, reqwest                  |
-| Consumed by  | Air, Mountain, SideCar                        |
+- Provides network isolation for sidecar processes (`Cocoon`, `Air`, `Grove`)
+- Prevents them from resolving arbitrary external hosts without explicit
+  allowlisting
+
+| Attribute    | Value                                               |
+| ------------ | --------------------------------------------------- |
+| Language     | `Rust` (edition 2024)                               |
+| Crate type   | Library + Binary                                    |
+| DNS library  | `hickory-server`, `hickory-proto`, `hickory-client` |
+| Port         | 5380 (UDP + TCP)                                    |
+| Dependencies | `Common`, `ring`, `tokio`, `reqwest`                |
+| Consumed by  | `Air`, `Mountain`, `SideCar`                        |
 
 ---
 
-## Architecture
+## Architecture 🏗️
 
 ```
 +----------------------------------------------------------+
@@ -86,7 +90,7 @@ without explicit allowlisting.
 +----------------------------------------------------------+
 ```
 
-### Module Map
+### Module Map 🗺️
 
 | Path                        | Purpose                                                |
 | --------------------------- | ------------------------------------------------------ |
@@ -94,14 +98,14 @@ without explicit allowlisting.
 | `Source/Zone.rs`            | `editor.land` zone configuration and record generation |
 | `Source/Resolver.rs`        | External DNS forwarding for allowlisted domains        |
 | `Source/ForwardSecurity.rs` | DNSSEC signing with ECDSA P-256                        |
-| `Source/WebSocket.rs`       | WebSocket transport for Sky<->Cocoon communication     |
+| `Source/WebSocket.rs`       | WebSocket transport for `Sky`<->`Cocoon` communication |
 | `Source/lib.rs`             | Library root                                           |
 
 ---
 
-## DNS Zone Configuration
+## DNS Zone Configuration 🌐
 
-Mist serves the `editor.land` zone with the following configuration:
+`Mist` serves the `editor.land` zone with the following configuration:
 
 ```
 editor.land.  IN SOA  localhost. root.editor.land. (
@@ -115,12 +119,13 @@ editor.land.  IN SOA  localhost. root.editor.land. (
 *.editor.land.  IN A  127.0.0.1
 ```
 
-All `*.editor.land` subdomains resolve to `127.0.0.1`, ensuring sidecar
-processes communicate only over localhost. This prevents any sidecar process
-from exfiltrating data through DNS, providing a first line of defense against
-compromised extension code.
+All `*.editor.land` subdomains resolve to `127.0.0.1`:
 
-### Resolution Rules
+- Ensures sidecar processes communicate only over localhost
+- Prevents any sidecar process from exfiltrating data through DNS
+- Provides a first line of defense against compromised extension code
+
+### Resolution Rules 📋
 
 | Query Pattern      | Response                | Behavior                        |
 | ------------------ | ----------------------- | ------------------------------- |
@@ -130,10 +135,10 @@ compromised extension code.
 
 ---
 
-## Forward Allowlisting
+## Forward Allowlisting 📝
 
-Mist maintains a configurable allowlist of trusted external domains that sidecar
-processes may resolve:
+`Mist` maintains a configurable allowlist of trusted external domains that
+sidecar processes may resolve:
 
 | Domain                         | Purpose                        | Status              |
 | ------------------------------ | ------------------------------ | ------------------- |
@@ -148,9 +153,9 @@ at runtime.
 
 ---
 
-## DNSSEC
+## DNSSEC 🔐
 
-Mist supports DNSSEC with ECDSA P-256 signing for the `editor.land` zone:
+`Mist` supports DNSSEC with ECDSA P-256 signing for the `editor.land` zone:
 
 | Aspect         | Detail                               |
 | -------------- | ------------------------------------ |
@@ -166,12 +171,13 @@ DNSSEC.
 
 ---
 
-## WebSocket Transport
+## WebSocket Transport 🔌
 
-In addition to DNS serving, Mist provides a WebSocket transport layer for
-Sky<->Cocoon communication. This is used for real-time data streaming between
-the UI layer and the extension host when gRPC is unavailable or inappropriate
-for the communication pattern.
+In addition to DNS serving, `Mist` provides a WebSocket transport layer for
+`Sky`<->`Cocoon` communication:
+
+- Used for real-time data streaming between the UI layer and the extension host
+- Used when `gRPC` is unavailable or inappropriate for the communication pattern
 
 ```
 Sky UI (WebView)
@@ -187,7 +193,7 @@ Cocoon (Node.js extension host)
 
 ---
 
-## Startup Sequence
+## Startup Sequence 🚀
 
 ```
 1. Mountain or Air spawns Mist binary
@@ -211,16 +217,16 @@ Cocoon (Node.js extension host)
 
 ---
 
-## Related Documentation
+## Related Documentation 📚
 
-- [Air](../Air/Documentation/GitHub/Architecture.md) - Background daemon (DNS
-  consumer)
-- [Mountain](../Mountain/Documentation/GitHub/Architecture.md) - Main backend
-  (DNS consumer)
-- [SideCar](../SideCar/Documentation/GitHub/Architecture.md) - Vendored runtimes
-  (DNS consumer)
-- [RustInfrastructure](../../../Documentation/GitHub/RustInfrastructure.md) -
-  Rust backend components
+- [Air](https://github.com/CodeEditorLand/Air/tree/Current/Documentation/GitHub/Architecture.md) -
+  Background daemon (DNS consumer)
+- [Mountain](https://github.com/CodeEditorLand/Mountain/tree/Current/Documentation/GitHub/Architecture.md) -
+  Main backend (DNS consumer)
+- [SideCar](https://github.com/CodeEditorLand/SideCar/tree/Current/Documentation/GitHub/Architecture.md) -
+  Vendored runtimes (DNS consumer)
+- [RustInfrastructure](https://github.com/CodeEditorLand/Land/tree/Current/Documentation/GitHub/RustInfrastructure.md) -
+  `Rust` backend components
 
 ---
 

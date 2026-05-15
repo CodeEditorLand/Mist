@@ -5,7 +5,7 @@
 		</td>
 		<td align="left" valign="middle">
 			<h3 align="left">
-				🌫️
+				&#x2001;🌫️
 			</h3>
 		</td>
 		<td align="left" valign="middle">
@@ -62,7 +62,7 @@ editor and the outside world."_
 [<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
 [![Hickory DNS Version](https://img.shields.io/badge/Hickory_v0.24-blue.svg)](https://github.com/hickory-dns/hickory-dns)
 
-📖 **[Rust API Documentation](https://Rust.Documentation.Editor.Land/Mist/)**
+**[Rust API Documentation](https://Rust.Documentation.Editor.Land/Mist/)**&#x2001;📖
 
 Welcome to **Mist**! This element provides DNS isolation and private network
 resolution for the Land Code Editor. It creates a secure DNS sandbox that

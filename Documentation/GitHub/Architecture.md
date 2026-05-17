@@ -3,7 +3,7 @@
 This document describes `Mist`, a local DNS server that provides network
 isolation for `Land`'s sidecar processes:
 
-- Runs an authoritative DNS server for the `editor.land` zone
+- Runs an authoritative DNS server for the `land.playform.cloud` zone
 - Resolves all subdomains to `127.0.0.1`
 - Implements forward allowlisting for controlled external domain access
 
@@ -26,7 +26,7 @@ isolation for `Land`'s sidecar processes:
 graph TB
     subgraph Mist["Mist DNS Isolation Server"]
         SRV["Server.rs<br/>UDP + TCP<br/>port 5380"]
-        ZONE["Zone.rs<br/>editor.land zone<br/>*.editor.land -> 127.0.0.1"]
+        ZONE["Zone.rs<br/>land.playform.cloud zone<br/>*.land.playform.cloud -> 127.0.0.1"]
         RES["Resolver.rs<br/>external DNS<br/>forwarding"]
         FSEC["ForwardSecurity.rs<br/>DNSSEC signing<br/>ECDSA P-256"]
         WS["WebSocket.rs<br/>Sky<->Cocoon<br/>transport"]
@@ -45,8 +45,8 @@ graph TB
 
 ## Overview 📋
 
-`Mist` runs a local `Hickory DNS` server authoritative for the `editor.land`
-zone on loopback (port 5380):
+`Mist` runs a local `Hickory DNS` server authoritative for the
+`land.playform.cloud` zone on loopback (port 5380):
 
 - Provides network isolation for sidecar processes (`Cocoon`, `Air`, `Grove`)
 - Prevents them from resolving arbitrary external hosts without explicit
@@ -71,7 +71,7 @@ zone on loopback (port 5380):
 |                                                           |
 |  +------------------+  +------------------+               |
 |  | Server.rs        |  | Zone.rs          |               |
-|  | UDP + TCP DNS    |  | editor.land zone |               |
+|  | UDP + TCP DNS    |  | land.playform.cloud zone |               |
 |  | listener         |  | resolution logic |               |
 |  +------------------+  +------------------+               |
 |                                                           |
@@ -92,23 +92,23 @@ zone on loopback (port 5380):
 
 ### Module Map 🗺️
 
-| Path                        | Purpose                                                |
-| --------------------------- | ------------------------------------------------------ |
-| `Source/Server.rs`          | UDP and TCP DNS listener, query dispatch               |
-| `Source/Zone.rs`            | `editor.land` zone configuration and record generation |
-| `Source/Resolver.rs`        | External DNS forwarding for allowlisted domains        |
-| `Source/ForwardSecurity.rs` | DNSSEC signing with ECDSA P-256                        |
-| `Source/WebSocket.rs`       | WebSocket transport for `Sky`<->`Cocoon` communication |
-| `Source/lib.rs`             | Library root                                           |
+| Path                        | Purpose                                                        |
+| --------------------------- | -------------------------------------------------------------- |
+| `Source/Server.rs`          | UDP and TCP DNS listener, query dispatch                       |
+| `Source/Zone.rs`            | `land.playform.cloud` zone configuration and record generation |
+| `Source/Resolver.rs`        | External DNS forwarding for allowlisted domains                |
+| `Source/ForwardSecurity.rs` | DNSSEC signing with ECDSA P-256                                |
+| `Source/WebSocket.rs`       | WebSocket transport for `Sky`<->`Cocoon` communication         |
+| `Source/lib.rs`             | Library root                                                   |
 
 ---
 
 ## DNS Zone Configuration 🌐
 
-`Mist` serves the `editor.land` zone with the following configuration:
+`Mist` serves the `land.playform.cloud` zone with the following configuration:
 
 ```
-editor.land.  IN SOA  localhost. root.editor.land. (
+land.playform.cloud.  IN SOA  localhost. root.land.playform.cloud. (
     2026010100 ; serial
     3600       ; refresh
     900        ; retry
@@ -116,10 +116,10 @@ editor.land.  IN SOA  localhost. root.editor.land. (
     60         ; minimum TTL
 )
 
-*.editor.land.  IN A  127.0.0.1
+*.land.playform.cloud.  IN A  127.0.0.1
 ```
 
-All `*.editor.land` subdomains resolve to `127.0.0.1`:
+All `*.land.playform.cloud` subdomains resolve to `127.0.0.1`:
 
 - Ensures sidecar processes communicate only over localhost
 - Prevents any sidecar process from exfiltrating data through DNS
@@ -127,11 +127,11 @@ All `*.editor.land` subdomains resolve to `127.0.0.1`:
 
 ### Resolution Rules 📋
 
-| Query Pattern      | Response                | Behavior                        |
-| ------------------ | ----------------------- | ------------------------------- |
-| `*.editor.land`    | `A 127.0.0.1`           | Authoritative answer from zone  |
-| Allowlisted domain | Forward to upstream DNS | Pass-through to system resolver |
-| All other domains  | `NXDOMAIN`              | Refused                         |
+| Query Pattern           | Response                | Behavior                        |
+| ----------------------- | ----------------------- | ------------------------------- |
+| `*.land.playform.cloud` | `A 127.0.0.1`           | Authoritative answer from zone  |
+| Allowlisted domain      | Forward to upstream DNS | Pass-through to system resolver |
+| All other domains       | `NXDOMAIN`              | Refused                         |
 
 ---
 
@@ -143,7 +143,7 @@ sidecar processes may resolve:
 | Domain                         | Purpose                        | Status              |
 | ------------------------------ | ------------------------------ | ------------------- |
 | `marketplace.visualstudio.com` | Extension downloads            | Allowlisted         |
-| `update.editor.land`           | Application update server      | Allowlisted         |
+| `update.land.playform.cloud`   | Application update server      | Allowlisted         |
 | `api.posthog.com`              | Telemetry (when enabled)       | Allowlisted         |
 | `www.google-analytics.com`     | Usage analytics (when enabled) | Allowlisted         |
 | All unlisted domains           | Blocked                        | `NXDOMAIN` response |
@@ -155,7 +155,8 @@ at runtime.
 
 ## DNSSEC 🔐
 
-`Mist` supports DNSSEC with ECDSA P-256 signing for the `editor.land` zone:
+`Mist` supports DNSSEC with ECDSA P-256 signing for the `land.playform.cloud`
+zone:
 
 | Aspect         | Detail                               |
 | -------------- | ------------------------------------ |
@@ -202,11 +203,11 @@ Cocoon (Node.js extension host)
 
 2. Mist opens UDP and TCP listeners on port 5380
    - Hickory DNS server initializes
-   - editor.land zone is loaded from configuration
+   - land.playform.cloud zone is loaded from configuration
    - DNSSEC signing keys are loaded or generated
 
 3. DNS resolution begins
-   - *.editor.land queries answered authoritatively
+   - *.land.playform.cloud queries answered authoritatively
    - Allowlisted domains forwarded to system resolver
    - All other domains return NXDOMAIN
 
@@ -231,6 +232,6 @@ Cocoon (Node.js extension host)
 ---
 
 **Project Maintainers:** Source Open
-([Source/Open@Editor.Land](mailto:Source/Open@Editor.Land)) |
+([Source/Open@Land.PlayForm.Cloud](mailto:Source/Open@Land.PlayForm.Cloud)) |
 [GitHub Repository](https://github.com/CodeEditorLand/Mist) |
 [Report an Issue](https://github.com/CodeEditorLand/Mist/issues)

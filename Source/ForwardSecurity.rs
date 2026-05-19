@@ -29,7 +29,6 @@ pub fn DefaultForwardAllowlist() -> impl Iterator<Item = Result<Name>> {
 
 #[cfg(test)]
 mod tests {
-
 	use super::*;
 
 	#[test]

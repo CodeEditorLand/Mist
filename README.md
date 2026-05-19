@@ -109,30 +109,42 @@ that all private network communication remains local and secure.
 
 **Mist** follows a layered architecture:
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                     Applications (Wind, Cocoon)                 │
-│                        (DNS Queries)                            │
-└────────────────────────────────────┬────────────────────────────┘
-                                     │
-                                     ▼
-┌────────────────────────────────────────────────────────────────┐
-│                     Mist DNS Server (127.0.0.1:PORT)           │
-│  ┌──────────────────────────────────────────────────────────┐  │
-│  │                   DNS Catalog                            │  │
-│  │  ┌────────────────────┐  ┌──────────────────────┐        │  │
-│  │  │ Editor.land Zone   │  │ Forward Allowlist    │        │  │
-│  │  │ (Authoritative)    │  │ (Restricted Access)  │        │  │
-│  │  │ *.land.playform.cloud →    │  │ update.land.playform.cloud   │        │  │
-│  │  │ 127.0.0.1          │  │                      │        │  │
-│  │  └────────────────────┘  └──────────────────────┘        │  │
-│  └──────────────────────────────────────────────────────────┘  │
-│                                                                │
-│  Hickory DNS Server Core (UDP + TCP)                           │
-│  - Request parsing and response construction                   │
-│  - Zone lookup and record matching                             │
-│  - DNSSEC signature verification                               │
-└────────────────────────────────────────────────────────────────┘
+```mermaid
+graph LR
+    classDef mist     fill:#e0f0ff,stroke:#2471a3,stroke-width:2px,color:#001030;
+    classDef zone     fill:#d4f5d4,stroke:#27ae60,stroke-width:1px,color:#0a3a0a;
+    classDef forward  fill:#fff3c0,stroke:#f39c12,stroke-width:1px,stroke-dasharray:5 5,color:#5a3e00;
+    classDef consumer fill:#f0d0ff,stroke:#9b59b6,stroke-width:1px,color:#2c0050;
+    classDef external fill:#ebebeb,stroke:#888,stroke-width:1px,stroke-dasharray:5 5,color:#333;
+
+    subgraph CONSUMERS["Land Components - DNS Clients"]
+        Mountain["Mountain ⛰️\nstarts Mist, reads DnsPort"]:::consumer
+        Cocoon["Cocoon 🦋\nNode.js sidecar (DNS override)"]:::consumer
+        Air["Air 🪁\nHTTP client with custom DNS"]:::consumer
+    end
+
+    subgraph MIST["Mist 🌫️ - Local DNS Server (127.0.0.1:PORT)"]
+        direction TB
+        Server["Server.rs - Hickory DNS\nUDP + TCP listeners"]:::mist
+        Zone["Zone.rs - Authoritative Zone\n*.land.playform.cloud → 127.0.0.1\nDNSSEC signed ECDSA P-256"]:::zone
+        Forward["ForwardSecurity.rs - Allowlist\nupdate.land.playform.cloud only"]:::forward
+        Resolver["Resolver.rs - LandDnsResolver"]:::mist
+        WSTransport["WebSocket.rs - DNS data stream"]:::mist
+
+        Server --> Zone
+        Server --> Forward
+        Server --> Resolver
+        Resolver --- WSTransport
+    end
+
+    subgraph INTERNET["External ☁️"]
+        UpdateServer["update.land.playform.cloud\nallowlisted only"]:::external
+    end
+
+    Mountain -- spawns + DnsPort --> Server
+    Cocoon -- DNS queries --> Server
+    Air -- DNS queries --> Resolver
+    Forward -- forwards allowed --> UpdateServer
 ```
 
 ### Components

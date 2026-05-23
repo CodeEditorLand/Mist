@@ -1,4 +1,14 @@
-#![allow(non_snake_case, non_camel_case_types, non_upper_case_globals)]
+#![allow(
+	non_snake_case,
+	non_camel_case_types,
+	non_upper_case_globals,
+	dead_code,
+	unused_imports,
+	unused_variables,
+	unused_assignments,
+	clippy::tabs_in_doc_comments,
+	clippy::unnecessary_lazy_evaluations
+)]
 //! # Mist: Private DNS for Local-First Networking
 //! Mist gives Land its own private DNS so editor components can find each
 //! other on `*.editor.land` without touching the public internet. All queries
@@ -30,8 +40,6 @@
 //! 	Ok(())
 //! }
 //! ```
-
-#![allow(clippy::tabs_in_doc_comments, clippy::unnecessary_lazy_evaluations)]
 
 use std::thread;
 

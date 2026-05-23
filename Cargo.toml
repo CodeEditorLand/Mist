@@ -8,7 +8,7 @@ publish = false
 
 [lib]
 name = "Mist"
-path = "Source/lib.rs"
+path = "Source/Library.rs"
 
 [dependencies]
 hickory-server = { workspace = true, features = ["dnssec-ring"] }

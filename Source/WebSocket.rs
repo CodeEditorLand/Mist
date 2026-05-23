@@ -1,5 +1,3 @@
-#![allow(non_snake_case)]
-
 //! Mist WebSocket transport.
 //!
 //! Local-first JSON-RPC over WebSocket for the Sky↔Cocoon direct

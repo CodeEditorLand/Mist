@@ -1,4 +1,3 @@
-#![allow(non_camel_case_types, non_upper_case_globals)]
 //! # DNS Resolver
 //!
 //! Provides DNS resolution for the CodeEditorLand private network.

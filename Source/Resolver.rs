@@ -35,8 +35,10 @@ impl reqwest::dns::Resolve for LandDnsResolver {
 
 		Box::pin(async move {
 			let IsEditorLand = NameString.ends_with(".editor.land") || NameString == "editor.land";
+
 			if IsEditorLand {
 				let Addresses = vec![SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)];
+
 				Ok(Box::new(Addresses.into_iter()) as Box<dyn Iterator<Item = SocketAddr> + Send>)
 			} else {
 				Ok(Box::new(std::iter::empty()) as Box<dyn Iterator<Item = SocketAddr> + Send>)

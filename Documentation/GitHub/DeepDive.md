@@ -33,7 +33,6 @@ graph TB
 
     subgraph "Consumers"
         Mountain["Mountain\nDnsPort managed state"]
-        Air["Air\nHTTP client DNS override"]
         SideCar["SideCar\nNode.js DNS environment variable"]
         Cocoon["Cocoon\nland.playform.cloud resolution"]
     end
@@ -46,7 +45,6 @@ graph TB
     ForwardSecurity --> ForwardZone
     LibRS --> ResolverRS
     Mountain --> LibRS
-    Air --> ResolverRS
     SideCar --> ResolverRS
     Cocoon --> ResolverRS
 ```
@@ -106,7 +104,6 @@ sequenceDiagram
 | Connecting Element | Direction         | Mechanism                | Description                                                                                       |
 | :----------------- | :---------------- | :----------------------- | :------------------------------------------------------------------------------------------------ |
 | **Mountain**       | Consumer          | `Mist::start()` Rust API | Mountain starts Mist and stores the port in `DnsPort` managed state                               |
-| **Air**            | Consumer          | `LandDnsResolver`        | Air configures its `reqwest` HTTP client to use the local resolver                                |
 | **SideCar**        | Consumer          | Environment variable     | SideCar passes the DNS port to spawned Node.js processes via `NODE_EXTRA_CA_CERTS` / DNS override |
 | **Cocoon**         | Indirect consumer | Node.js DNS override     | Cocoon resolves `cocoon.land.playform.cloud` and Mountain gRPC addresses through Mist             |
 

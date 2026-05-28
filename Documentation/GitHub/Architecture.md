@@ -39,7 +39,7 @@ graph TB
         RES -->|"allowlisted"| UPSTREAM["Upstream DNS"]
     end
 
-    SIDECARS["Sidecars<br/>Cocoon / Air / Grove"] -->|"DNS queries"| SRV
+    SIDECARS["Sidecars<br/>Cocoon / Air"] -->|"DNS queries"| SRV
     ZONE -->|"NXDOMAIN"| BLOCKED["Blocked domains"]
 ```
 
@@ -48,7 +48,7 @@ graph TB
 `Mist` runs a local `Hickory DNS` server authoritative for the
 `land.playform.cloud` zone on loopback (port 5380):
 
-- Provides network isolation for sidecar processes (`Cocoon`, `Air`, `Grove`)
+- Provides network isolation for sidecar processes (`Cocoon`, `Air`)
 - Prevents them from resolving arbitrary external hosts without explicit
   allowlisting
 
@@ -59,7 +59,7 @@ graph TB
 | DNS library  | `hickory-server`, `hickory-proto`, `hickory-client` |
 | Port         | 5380 (UDP + TCP)                                    |
 | Dependencies | `Common`, `ring`, `tokio`, `reqwest`                |
-| Consumed by  | `Air`, `Mountain`, `SideCar`                        |
+| Consumed by  | `Mountain`, `SideCar`                               |
 
 ---
 
@@ -197,7 +197,7 @@ Cocoon (Node.js extension host)
 ## Startup Sequence 🚀
 
 ```
-1. Mountain or Air spawns Mist binary
+1. Mountain spawns Mist binary
    - Port 5380 is bound (UDP + TCP)
    - System DNS configuration may be updated to point to loopback
 

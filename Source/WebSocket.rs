@@ -299,18 +299,22 @@ impl Client {
 					Ok(M) => M,
 					Err(_) => break,
 				};
+
 				match Frame {
 					Message::Text(Text) => {
 						if let Ok(Envelope) = serde_json::from_str::<Value>(&Text) {
 							let Identifier = Envelope.get("id").and_then(|V| V.as_u64());
+
 							if let Some(Identifier) = Identifier {
 								let Sender = SelfForReader.Pending.lock().await.remove(&Identifier);
+
 								if let Some(Sender) = Sender {
 									let Result = if let Some(ErrorValue) = Envelope.get("error") {
 										Err(ErrorValue.to_string())
 									} else {
 										Ok(Envelope.get("result").cloned().unwrap_or(Value::Null))
 									};
+
 									let _ = Sender.send(Result);
 								}
 							}
@@ -320,9 +324,12 @@ impl Client {
 					_ => {},
 				}
 			}
+
 			SelfForReader.Closed.store(true, Ordering::Relaxed);
+
 			// Drain any remaining pending senders with disconnect errors.
 			let mut Pending = SelfForReader.Pending.lock().await;
+
 			for (_, Sender) in Pending.drain() {
 				let _ = Sender.send(Err("connection closed".into()));
 			}

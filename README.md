@@ -38,7 +38,7 @@
 		<td align="left" valign="middle" width="190">
 			<h3 align="left">
 				<a href="https://hickory-dns.org" target="_blank">
-					<img width="160" alt="Made With Hickory DNS" src="https://avatars.githubusercontent.com/u/133828474?v=4">
+					<img width="160" alt="Made With Hickory DNS" src="https://avatars.githubusercontent.com/u/133828474">
 				</a>
 			</h3>
 		</td>
@@ -90,7 +90,7 @@ that all private network communication remains local and secure.
 - **Hickory DNS Server:** Built on the high-performance Hickory DNS library
   (formerly Trust-DNS), providing a robust, async DNS server implementation.
 - **Authoritative Zone:** Operates as an authoritative DNS server for
-  `land.playform.cloud`, resolving all subdomains (`*.land.playform.cloud`) to
+  `land.playform.cloud`, resolving all subdomains (`*.editor.land`) to
   `127.0.0.1` for secure local communication.
 - **Forward Security:** Implements a strict allowlist for external DNS queries,
   preventing sidecars from reaching unauthorized external hosts by default.
@@ -138,7 +138,7 @@ graph LR
     end
 
     subgraph INTERNET["External ☁️"]
-        UpdateServer["update.land.playform.cloud\nallowlisted only"]:::external
+        UpdateServer["update.editor.land\nallowlisted only"]:::external
     end
 
     Mountain -- spawns + DnsPort --> Server
@@ -168,13 +168,13 @@ All subdomains of `land.playform.cloud` resolve to `127.0.0.1`:
 
 - `code.land.playform.cloud` → `127.0.0.1`
 - `api.land.playform.cloud` → `127.0.0.1`
-- `*.land.playform.cloud` → `127.0.0.1`
+- `*.editor.land` → `127.0.0.1`
 
 ### Forward Allowlist
 
 Only allowlisted external domains can be resolved:
 
-- `update.land.playform.cloud` - For application updates
+- `update.editor.land` - For application updates
 
 All other external queries are refused by default.
 

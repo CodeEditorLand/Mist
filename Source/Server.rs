@@ -30,17 +30,17 @@ use tokio::net::UdpSocket;
 /// length prefix cap from RFC 1035 §4.2.2). Picking the cap avoids any
 /// truncation for zone-transfer or large TXT responses while staying well
 /// within memory for the dozen-or-so concurrent connections a local
-/// `editor.land` catalog ever sees.
+/// `land.playform.cloud` catalog ever sees.
 const DNS_TCP_RESPONSE_BUFFER_SIZE:usize = 65_535;
 
 /// Builds a DNS catalog for the CodeEditorLand private network.
 ///
-/// Creates a catalog with an authoritative zone for `editor.land` that
+/// Creates a catalog with an authoritative zone for `land.playform.cloud` that
 /// resolves all queries locally to loopback addresses.
 pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 	let mut Catalog = Catalog::new();
 
-	let EditorLandOrigin = hickory_proto::rr::Name::from_ascii("editor.land.").unwrap();
+	let EditorLandOrigin = hickory_proto::rr::Name::from_ascii("land.playform.cloud.").unwrap();
 
 	// `AxfrPolicy::Deny` replaces the old `false` bool that disabled AXFR.
 	// The trailing `None` is `Option<NxProofKind>` and remains dnssec-ring-gated.

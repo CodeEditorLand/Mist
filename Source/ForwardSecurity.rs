@@ -21,7 +21,7 @@ use hickory_proto::rr::Name;
 /// Domains in the allowlist may be forwarded to upstream DNS servers.
 /// All other domains receive `REFUSED`.
 pub fn DefaultForwardAllowlist() -> impl Iterator<Item = Result<Name>> {
-	vec![Name::from_ascii("update.editor.land.")]
+	vec![Name::from_ascii("update.land.playform.cloud.")]
 		.into_iter()
 		.map(|R| R.map_err(|E| anyhow!("Failed to parse domain name: {}", E)))
 }

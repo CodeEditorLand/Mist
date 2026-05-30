@@ -6,6 +6,9 @@ for the `land.playform.cloud` zone, ensuring all private network communication
 stays on loopback and preventing sidecars from reaching unauthorized external
 hosts.
 
+The reset was the opposite: `editor.land` is the former domain; production
+runtime traffic now uses `land.playform.cloud`.
+
 ---
 
 ## Architecture
@@ -34,7 +37,7 @@ graph TB
     subgraph "Consumers"
         Mountain["Mountain\nDnsPort managed state"]
         SideCar["SideCar\nNode.js DNS environment variable"]
-        Cocoon["Cocoon\nland.playform.cloud resolution"]
+        Cocoon["Cocoon\neditor.land resolution"]
     end
 
     LibRS --> ServerRS
@@ -57,7 +60,7 @@ graph TB
 | :--------------------------- | :---------------------------------------------------------------------------- |
 | `Source/lib.rs`              | Public library API: `start(port)`, `dns_port()`, module re-exports            |
 | `Source/server.rs`           | Hickory DNS server: UDP/TCP socket binding, catalog wiring, async accept loop |
-| `Source/zone.rs`             | `land.playform.cloud` zone configuration: SOA, A records, wildcard resolution |
+| `Source/zone.rs`             | `editor.land` zone configuration: SOA, A records, wildcard resolution         |
 | `Source/resolver.rs`         | `LandDnsResolver` - DNS client pointed at the local server for consumer use   |
 | `Source/forward_security.rs` | Forward allowlist: rejects external queries not on the approved list          |
 | `tests/integration.rs`       | Integration tests: zone resolution, DNSSEC verification, forward blocking     |
@@ -73,9 +76,9 @@ sequenceDiagram
     participant MistServer as Mist DNS Server
     participant Catalog as DNS Catalog
 
-    App->>Resolver: resolve("api.land.playform.cloud")
+    App->>Resolver: resolve("api.editor.land")
     Resolver->>MistServer: DNS query (UDP 127.0.0.1:PORT)
-    MistServer->>Catalog: Lookup "api.land.playform.cloud"
+    MistServer->>Catalog: Lookup "api.editor.land"
     Catalog->>MistServer: A record → 127.0.0.1 (authoritative)
     MistServer->>Resolver: DNS response with RRSIG
     Resolver->>App: 127.0.0.1
@@ -105,20 +108,20 @@ sequenceDiagram
 | :----------------- | :---------------- | :----------------------- | :------------------------------------------------------------------------------------------------ |
 | **Mountain**       | Consumer          | `Mist::start()` Rust API | Mountain starts Mist and stores the port in `DnsPort` managed state                               |
 | **SideCar**        | Consumer          | Environment variable     | SideCar passes the DNS port to spawned Node.js processes via `NODE_EXTRA_CA_CERTS` / DNS override |
-| **Cocoon**         | Indirect consumer | Node.js DNS override     | Cocoon resolves `cocoon.land.playform.cloud` and Mountain gRPC addresses through Mist             |
+| **Cocoon**         | Indirect consumer | Node.js DNS override     | Cocoon resolves `cocoon.editor.land` and Mountain gRPC addresses through Mist                     |
 
 ---
 
 ## Configuration
 
-| Parameter          | Value                        | Description                                                  |
-| :----------------- | :--------------------------- | :----------------------------------------------------------- |
-| Preferred port     | `5380`                       | Primary bind port; falls back to any available port if taken |
-| Bind address       | `127.0.0.1`                  | Loopback only - no external interface exposure               |
-| Authoritative zone | `land.playform.cloud`        | All subdomains resolve to `127.0.0.1`                        |
-| Forward allowlist  | `update.land.playform.cloud` | Only this domain may be resolved externally                  |
-| DNSSEC algorithm   | ECDSA P-256                  | Zone signing key algorithm                                   |
-| Transport          | UDP + TCP                    | Hickory serves both; clients may use either                  |
+| Parameter          | Value                | Description                                                  |
+| :----------------- | :------------------- | :----------------------------------------------------------- |
+| Preferred port     | `5380`               | Primary bind port; falls back to any available port if taken |
+| Bind address       | `127.0.0.1`          | Loopback only - no external interface exposure               |
+| Authoritative zone | `editor.land`        | All subdomains resolve to `127.0.0.1`                        |
+| Forward allowlist  | `update.editor.land` | Only this domain may be resolved externally                  |
+| DNSSEC algorithm   | ECDSA P-256          | Zone signing key algorithm                                   |
+| Transport          | UDP + TCP            | Hickory serves both; clients may use either                  |
 
 DNSSEC signing is performed at zone load time. The DNSKEY and RRSIG records are
 included in responses to clients that request DNSSEC data (`DO` bit set).

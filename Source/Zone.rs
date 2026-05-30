@@ -1,8 +1,8 @@
 //! # DNS Zone
 //!
 //! Provides DNS zone configuration for the CodeEditorLand private network.
-//! Creates an authoritative zone for `editor.land` that resolves to loopback
-//! addresses.
+//! Creates an authoritative zone for `land.playform.cloud` that resolves to
+//! loopback addresses.
 
 use anyhow::Result;
 use hickory_proto::rr::{
@@ -22,13 +22,13 @@ use hickory_server::{
 	zone_handler::{AxfrPolicy, ZoneType},
 };
 
-/// Creates the `editor.land` authoritative zone records.
+/// Creates the `land.playform.cloud` authoritative zone records.
 ///
-/// All `*.editor.land` domains resolve to `127.x.x.x` (loopback).
+/// All `*.land.playform.cloud` domains resolve to `127.x.x.x` (loopback).
 pub fn EditorLandZone() -> Result<Vec<Record>> {
 	let mut Records = Vec::new();
 
-	let Origin = Name::from_ascii("editor.land.").unwrap();
+	let Origin = Name::from_ascii("land.playform.cloud.").unwrap();
 
 	let TTL = 300u32;
 
@@ -43,8 +43,8 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	let Minimum:u32 = 3600;
 
 	let SOARecord = SOA::new(
-		Name::from_ascii("ns1.editor.land.").unwrap(),
-		Name::from_ascii("hostmaster.editor.land.").unwrap(),
+		Name::from_ascii("ns1.land.playform.cloud.").unwrap(),
+		Name::from_ascii("hostmaster.land.playform.cloud.").unwrap(),
 		Serial,
 		Refresh,
 		Retry,
@@ -54,12 +54,12 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 
 	Records.push(Record::from_rdata(Origin.clone(), TTL, RData::SOA(SOARecord)));
 
-	let NSName = Name::from_ascii("ns1.editor.land.").unwrap();
+	let NSName = Name::from_ascii("ns1.land.playform.cloud.").unwrap();
 
 	Records.push(Record::from_rdata(Origin.clone(), TTL, RData::NS(NS(NSName))));
 
 	Records.push(Record::from_rdata(
-		Name::from_ascii("ns1.editor.land.").unwrap(),
+		Name::from_ascii("ns1.land.playform.cloud.").unwrap(),
 		TTL,
 		RData::A(A::new(127, 0, 0, 1)),
 	));
@@ -67,7 +67,7 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	let Subdomains = vec!["editor", "www", "localhost", "sidecar", "cocoon"];
 
 	for (Index, Subdomain) in Subdomains.iter().enumerate() {
-		let SubdomainName = Name::from_ascii(format!("{}.editor.land.", Subdomain)).unwrap();
+		let SubdomainName = Name::from_ascii(format!("{}.land.playform.cloud.", Subdomain)).unwrap();
 
 		let IP = A::new(127, 0, (Index / 255) as u8, (Index % 255) as u8);
 
@@ -79,9 +79,9 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	Ok(Records)
 }
 
-/// Creates an `InMemoryZoneHandler` for the `editor.land` zone.
+/// Creates an `InMemoryZoneHandler` for the `land.playform.cloud` zone.
 pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
-	let Origin = Name::from_ascii("editor.land.").unwrap();
+	let Origin = Name::from_ascii("land.playform.cloud.").unwrap();
 
 	let Authority =
 		InMemoryZoneHandler::<TokioRuntimeProvider>::empty(Origin, ZoneType::Primary, AxfrPolicy::Deny, None);

@@ -2,12 +2,12 @@
 
 This document provides the technical foundation for the Mist DNS isolation layer
 within the Land ecosystem. **Mist** operates a local authoritative DNS server
-for the `land.playform.cloud` zone, ensuring all private network communication
+for the `editor.land` zone, ensuring all private network communication
 stays on loopback and preventing sidecars from reaching unauthorized external
 hosts.
 
 The reset was the opposite: `editor.land` is the former domain; production
-runtime traffic now uses `land.playform.cloud`.
+runtime traffic now uses `editor.land`.
 
 ---
 
@@ -15,7 +15,7 @@ runtime traffic now uses `land.playform.cloud`.
 
 Mist is a Rust library built on Hickory DNS. It exposes a public API for
 starting the server, querying the bound port, and constructing resolvers. The
-DNS catalog contains two zones: an authoritative zone for `land.playform.cloud`
+DNS catalog contains two zones: an authoritative zone for `editor.land`
 and a restricted forward allowlist for external queries.
 
 ```mermaid
@@ -23,14 +23,14 @@ graph TB
     subgraph "Mist - DNS Isolation Server"
         LibRS["lib.rs\nPublic API: start / dns_port"]
         ServerRS["server.rs\nHickory UDP + TCP listeners"]
-        ZoneRS["zone.rs\nland.playform.cloud zone authority"]
+        ZoneRS["zone.rs\neditor.land zone authority"]
         ResolverRS["resolver.rs\nDNS resolver for consumers"]
         ForwardSecurity["forward_security.rs\nExternal allowlist enforcement"]
     end
 
     subgraph "DNS Catalog"
-        AuthZone["land.playform.cloud zone\n*.land.playform.cloud → 127.0.0.1"]
-        ForwardZone["Forward allowlist\nupdate.land.playform.cloud only"]
+        AuthZone["editor.land zone\n*.editor.land → 127.0.0.1"]
+        ForwardZone["Forward allowlist\nupdate.editor.land only"]
         DNSSEC["DNSSEC\nECDSA P-256 zone signing"]
     end
 

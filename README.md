@@ -12,18 +12,18 @@
 		</td>
 		<td align="left" valign="middle">
 			<h3 align="left">
-				<a href="https://Land.PlayForm.Cloud" target="_blank">
+				<a href="https://editor.land" target="_blank">
 					<picture>
-						<source media="(prefers-color-scheme: dark)" srcset="https://PlayForm.Cloud/Dark/Image/GitHub/Land.svg" />
-						<source media="(prefers-color-scheme: light)" srcset="https://PlayForm.Cloud/Image/GitHub/Land.svg" />
-						<img width="28" alt="Land Logo" src="https://PlayForm.Cloud/Image/GitHub/Land.svg" />
+						<source media="(prefers-color-scheme: dark)" srcset="https://editor.land/Dark/Image/GitHub/Land.svg" />
+						<source media="(prefers-color-scheme: light)" srcset="https://editor.land/Image/GitHub/Land.svg" />
+						<img width="28" alt="Land Logo" src="https://editor.land/Image/GitHub/Land.svg" />
 					</picture>
 				</a>
 			</h3>
 		</td>
 		<td align="left" valign="middle">
 			<h3 align="left">
-				<a href="https://Land.PlayForm.Cloud" target="_blank">
+				<a href="https://editor.land" target="_blank">
 					Land&#x2001;🏞️
 				</a>
 			</h3>
@@ -47,7 +47,7 @@
 
 # **Mist**&#x2001;🌫️
 
-DNS Isolation for the land.playform.cloud Private Network
+DNS Isolation for the editor.land Private Network
 
 > **Development environments that communicate over the public internet expose
 > services to unnecessary risk. DNS resolution for local services goes through
@@ -57,25 +57,25 @@ _"Nothing leaks to the public internet. A clean network boundary between the
 editor and the outside world."_
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Mist/tree/Current/LICENSE)
-[<img src="https://land.playform.cloud/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
+[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Rust Version](https://img.shields.io/badge/Rust-1.95+-blue.svg)](https://www.rust-lang.org/)
 [![Hickory DNS Version](https://img.shields.io/badge/Hickory_v0.24-blue.svg)](https://github.com/hickory-dns/hickory-dns)
 
-**[Rust API Documentation](https://Rust.Documentation.Land.PlayForm.Cloud/Mist/)**&#x2001;📖
+**[Rust API Documentation](https://Rust.Documentation.editor.land/Mist/)**&#x2001;📖
 
 Welcome to **Mist**! This element provides DNS isolation and private network
 resolution for the Land Code Editor. It creates a secure DNS sandbox that
-resolves all `*.land.playform.cloud` domains locally to `127.0.0.1`, ensuring
+resolves all `*.editor.land` domains locally to `127.0.0.1`, ensuring
 that all private network communication remains local and secure.
 
 **Mist** is engineered to:
 
 1.  **Provide Private DNS Resolution:** Operate a local DNS server authoritative
-    for the `land.playform.cloud` zone, resolving all subdomains to localhost
+    for the `editor.land` zone, resolving all subdomains to localhost
     for secure local communication.
 2.  **Enforce Forward Security:** Implement a forward allowlist that only
     permits DNS resolution to specific, trusted external domains (e.g.,
-    `update.land.playform.cloud`).
-3.  **Support DNSSEC:** Sign the `land.playform.cloud` zone with ECDSA P-256
+    `update.editor.land`).
+3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256
     keys for DNSSEC, providing cryptographic assurance of DNS responses.
 4.  **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
     the local DNS server via a custom DNS override, ensuring they cannot access
@@ -88,7 +88,7 @@ that all private network communication remains local and secure.
 - **Hickory DNS Server:** Built on the high-performance Hickory DNS library
   (formerly Trust-DNS), providing a robust, async DNS server implementation.
 - **Authoritative Zone:** Operates as an authoritative DNS server for
-  `land.playform.cloud`, resolving all subdomains (`*.editor.land`) to
+  `editor.land`, resolving all subdomains (`*.editor.land`) to
   `127.0.0.1` for secure local communication.
 - **Forward Security:** Implements a strict allowlist for external DNS queries,
   preventing sidecars from reaching unauthorized external hosts by default.
@@ -124,8 +124,8 @@ graph LR
     subgraph MIST["Mist 🌫️ - Local DNS Server (127.0.0.1:PORT)"]
         direction TB
         Server["Server.rs - Hickory DNS\nUDP + TCP listeners"]:::mist
-        Zone["Zone.rs - Authoritative Zone\n*.land.playform.cloud → 127.0.0.1\nDNSSEC signed ECDSA P-256"]:::zone
-        Forward["ForwardSecurity.rs - Allowlist\nupdate.land.playform.cloud only"]:::forward
+        Zone["Zone.rs - Authoritative Zone\n*.editor.land → 127.0.0.1\nDNSSEC signed ECDSA P-256"]:::zone
+        Forward["ForwardSecurity.rs - Allowlist\nupdate.editor.land only"]:::forward
         Resolver["Resolver.rs - LandDnsResolver"]:::mist
         WSTransport["WebSocket.rs - DNS data stream"]:::mist
 
@@ -151,7 +151,7 @@ graph LR
 | :------------------- | :----------------------------------------------------------------------------------------------------- |
 | `lib.rs`             | Main library entry point, exports public `API` and manages DNS server state.                           |
 | `Server.rs`          | DNS server implementation using `Hickory`, handles `UDP`/`TCP` listeners and catalog management.       |
-| `Zone.rs`            | DNS zone configuration for `land.playform.cloud`, including record definitions and authority creation. |
+| `Zone.rs`            | DNS zone configuration for `editor.land`, including record definitions and authority creation. |
 | `Resolver.rs`        | DNS resolver for use by other components, provides interface to the local DNS server.                  |
 | `ForwardSecurity.rs` | Forward allowlist management, restricts which external domains can be resolved.                        |
 | `WebSocket.rs`       | WebSocket transport layer for real-time DNS data streaming.                                            |
@@ -160,12 +160,12 @@ graph LR
 
 ## DNS Zone Configuration&#x2001;📋
 
-### Authoritative Zone: `land.playform.cloud`
+### Authoritative Zone: `editor.land`
 
-All subdomains of `land.playform.cloud` resolve to `127.0.0.1`:
+All subdomains of `editor.land` resolve to `127.0.0.1`:
 
-- `code.land.playform.cloud` → `127.0.0.1`
-- `api.land.playform.cloud` → `127.0.0.1`
+- `code.editor.land` → `127.0.0.1`
+- `api.editor.land` → `127.0.0.1`
 - `*.editor.land` → `127.0.0.1`
 
 ### Forward Allowlist
@@ -178,7 +178,7 @@ All other external queries are refused by default.
 
 ### DNSSEC
 
-The `land.playform.cloud` zone is signed with ECDSA P-256 keys:
+The `editor.land` zone is signed with ECDSA P-256 keys:
 
 - DNSKEY records provide the public signing key
 - RRSIG records provide cryptographic signatures
@@ -252,7 +252,7 @@ let Catalog = build_catalog(5380)?;
 
 ## Security Considerations&#x2001;🔒
 
-1.  **Private Network Isolation:** All `land.playform.cloud` domains resolve to
+1.  **Private Network Isolation:** All `editor.land` domains resolve to
     localhost, preventing any external network access for private services.
 2.  **Forward Allowlist:** External DNS queries are restricted to a trusted
     allowlist, preventing sidecars from accessing arbitrary external hosts.
@@ -273,7 +273,7 @@ let Catalog = build_catalog(5380)?;
   clients to use the local DNS resolver.
 - **SideCar**: Spawns Node.js sidecars with DNS override configuration, ensuring
   all DNS queries go through the local server.
-- **Cocoon**: The Node.js extension host can resolve `land.playform.cloud`
+- **Cocoon**: The Node.js extension host can resolve `editor.land`
   domains via the local DNS server for gRPC communication with Mountain.
 
 ---
@@ -298,9 +298,9 @@ RUST_LOG=debug cargo test
 
 ## See Also
 
-- [Mist Documentation](https://land.playform.cloud/Doc/mist)
-- [Architecture Overview](https://land.playform.cloud/Doc/architecture)
-- [Why Rust](https://land.playform.cloud/Doc/why-rust)
+- [Mist Documentation](https://editor.land/Doc/mist)
+- [Architecture Overview](https://editor.land/Doc/architecture)
+- [Why Rust](https://editor.land/Doc/why-rust)
 - [Mountain](https://github.com/CodeEditorLand/Mountain)
 
 ---
@@ -363,12 +363,12 @@ Commons Fund grant.
 	<tbody>
 		<tr>
 			<td align="left" valign="middle">
-				<a href="https://Land.PlayForm.Cloud">
+				<a href="https://editor.land">
 					<img width="60" src="https://raw.githubusercontent.com/CodeEditorLand/Asset/refs/heads/Current/Logo/Land.svg" alt="Land" />
 				</a>
 			</td>
 			<td align="left" valign="middle">
-				<a href="https://PlayForm.Cloud">
+				<a href="https://editor.land">
 					<img width="76" src="https://raw.githubusercontent.com/PlayForm/Asset/refs/heads/Current/Logo/PlayForm.svg" alt="PlayForm" />
 				</a>
 			</td>
@@ -389,7 +389,7 @@ Commons Fund grant.
 ---
 
 **Project Maintainers**: Source Open
-([Source/Open@Land.PlayForm.Cloud](mailto:Source/Open@Land.PlayForm.Cloud)) |
+([Source/Open@editor.land](mailto:Source/Open@editor.land)) |
 [GitHub Repository](https://github.com/CodeEditorLand/Mist) |
 [Report an Issue](https://github.com/CodeEditorLand/Mist/issues) |
 [Security Policy](https://github.com/CodeEditorLand/Mist/security/policy)

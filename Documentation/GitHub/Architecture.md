@@ -3,7 +3,7 @@
 This document describes `Mist`, a local DNS server that provides network
 isolation for `Land`'s sidecar processes:
 
-- Runs an authoritative DNS server for the `land.playform.cloud` zone
+- Runs an authoritative DNS server for the `editor.land` zone
 - Resolves all subdomains to `127.0.0.1`
 - Implements forward allowlisting for controlled external domain access
 
@@ -26,7 +26,7 @@ isolation for `Land`'s sidecar processes:
 graph TB
     subgraph Mist["Mist DNS Isolation Server"]
         SRV["Server.rs<br/>UDP + TCP<br/>port 5380"]
-        ZONE["Zone.rs\nland.playform.cloud zone\n*.land.playform.cloud -> 127.0.0.1"]
+        ZONE["Zone.rs\neditor.land zone\n*.editor.land -> 127.0.0.1"]
         RES["Resolver.rs<br/>external DNS<br/>forwarding"]
         FSEC["ForwardSecurity.rs<br/>DNSSEC signing<br/>ECDSA P-256"]
         WS["WebSocket.rs<br/>Sky<->Cocoon<br/>transport"]
@@ -71,7 +71,7 @@ zone on loopback (port 5380):
 |                                                           |
 |  +------------------+  +------------------+               |
 |  | Server.rs        |  | Zone.rs          |               |
-||  | UDP + TCP DNS    |  | land.playform.cloud zone |               |
+||  | UDP + TCP DNS    |  | editor.land zone |               |
 |  | listener         |  | resolution logic |               |
 |  +------------------+  +------------------+               |
 |                                                           |
@@ -231,6 +231,6 @@ Cocoon (Node.js extension host)
 ---
 
 **Project Maintainers:** Source Open
-([Source/Open@Land.PlayForm.Cloud](mailto:Source/Open@Land.PlayForm.Cloud)) |
+([Source/Open@editor.land](mailto:Source/Open@editor.land)) |
 [GitHub Repository](https://github.com/CodeEditorLand/Mist) |
 [Report an Issue](https://github.com/CodeEditorLand/Mist/issues)

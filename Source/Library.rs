@@ -11,15 +11,15 @@
 )]
 //! # Mist: Private DNS for Local-First Networking
 //! Mist gives Land its own private DNS so editor components can find each
-//! other on `*.land.playform.cloud` without touching the public internet. All
+//! other on `*.editor.land` without touching the public internet. All
 //! queries resolve to `127.0.0.1`. No external DNS leaks, no configuration
 //! needed.
 //!
 //! ## Features
 //!
-//! - **Private DNS Zone**: Authoritative zone for `*.land.playform.cloud`
+//! - **Private DNS Zone**: Authoritative zone for `*.editor.land`
 //!   domains
-//! - **Local Resolution**: All land.playform.cloud queries resolve to
+//! - **Local Resolution**: All editor.land queries resolve to
 //!   `127.0.0.1`.
 //! - **Dynamic Port Allocation**: Automatically finds available ports using
 //!   portpicker
@@ -104,7 +104,7 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// This function performs the following steps:
 /// 1. Uses portpicker to find an available port (tries `preferred_port` first)
 /// 2. Sets the `DNS_PORT` global variable
-/// 3. Builds the DNS catalog with the `land.playform.cloud` zone
+/// 3. Builds the DNS catalog with the `editor.land` zone
 /// 4. Spawns the DNS server as a background task
 /// 5. Returns the port number
 ///

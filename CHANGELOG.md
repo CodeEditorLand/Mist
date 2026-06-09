@@ -1,9 +1,9 @@
 # Changelog - Mist
 
 Mist is our DNS isolation element - the Hickory-DNS-backed authoritative server
-that resolves `*.editor.land` to loopback so the editor's private
-network traffic never leaks to an external resolver. This file records what we
-built in our voice, version by version. Format adapted from
+that resolves `*.editor.land` to loopback so the editor's private network
+traffic never leaks to an external resolver. This file records what we built in
+our voice, version by version. Format adapted from
 [Keep a Changelog](https://keepachangelog.com/).
 
 ## [v2.1] - Full Workbench Lift (April 2026)
@@ -44,17 +44,16 @@ to give the fleet a private DNS surface.
 
 - **DNS isolation element** for the Land private network (`6db973f`,
   2026-02-27). A complete DNS server built on Hickory DNS that creates a secure
-  sandbox resolving `*.editor.land` exclusively to 127.0.0.1 - all
-  private network communication stays local and cannot leak.
+  sandbox resolving `*.editor.land` exclusively to 127.0.0.1 - all private
+  network communication stays local and cannot leak.
     - **`Server.rs`** - Hickory DNS server, UDP/TCP listeners bound exclusively
       to loopback with comprehensive security validation.
-    - **`Zone.rs`** - authoritative zone config for `editor.land` with
-      SOA, NS, A records all pointing at loopback.
+    - **`Zone.rs`** - authoritative zone config for `editor.land` with SOA, NS,
+      A records all pointing at loopback.
     - **`Resolver.rs`** - `LandDnsResolver` implementing `reqwest::dns::Resolve`
       for HTTP-client integration with defense-in-depth IP validation.
     - **`ForwardSecurity.rs`** - forward allowlist restricting external DNS
-      queries to trusted domains (`update.editor.land`,
-      `cdn.crashlytics.com`).
+      queries to trusted domains (`update.editor.land`, `cdn.crashlytics.com`).
     - **`Library.rs`** - public API: `Start()` and `DnsPort()`.
 - **Integration**: Mountain starts the DNS server during init and exposes the
   port via `DnsPort` managed state; Air uses it for secure HTTP; SideCar spawns

@@ -17,10 +17,8 @@
 //!
 //! ## Features
 //!
-//! - **Private DNS Zone**: Authoritative zone for `*.editor.land`
-//!   domains
-//! - **Local Resolution**: All editor.land queries resolve to
-//!   `127.0.0.1`.
+//! - **Private DNS Zone**: Authoritative zone for `*.editor.land` domains
+//! - **Local Resolution**: All editor.land queries resolve to `127.0.0.1`.
 //! - **Dynamic Port Allocation**: Automatically finds available ports using
 //!   portpicker
 //! - **Async/Sync Support**: Both async and blocking server implementations

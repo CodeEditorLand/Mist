@@ -64,19 +64,19 @@ editor and the outside world."_
 
 Welcome to **Mist**! This element provides DNS isolation and private network
 resolution for the Land Code Editor. It creates a secure DNS sandbox that
-resolves all `*.editor.land` domains locally to `127.0.0.1`, ensuring
-that all private network communication remains local and secure.
+resolves all `*.editor.land` domains locally to `127.0.0.1`, ensuring that all
+private network communication remains local and secure.
 
 **Mist** is engineered to:
 
 1.  **Provide Private DNS Resolution:** Operate a local DNS server authoritative
-    for the `editor.land` zone, resolving all subdomains to localhost
-    for secure local communication.
+    for the `editor.land` zone, resolving all subdomains to localhost for secure
+    local communication.
 2.  **Enforce Forward Security:** Implement a forward allowlist that only
     permits DNS resolution to specific, trusted external domains (e.g.,
     `update.editor.land`).
-3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256
-    keys for DNSSEC, providing cryptographic assurance of DNS responses.
+3.  **Support DNSSEC:** Sign the `editor.land` zone with ECDSA P-256 keys for
+    DNSSEC, providing cryptographic assurance of DNS responses.
 4.  **Enable Sidecar Isolation:** Allow Node.js sidecars (like `Cocoon`) to use
     the local DNS server via a custom DNS override, ensuring they cannot access
     arbitrary external hosts.
@@ -88,8 +88,8 @@ that all private network communication remains local and secure.
 - **Hickory DNS Server:** Built on the high-performance Hickory DNS library
   (formerly Trust-DNS), providing a robust, async DNS server implementation.
 - **Authoritative Zone:** Operates as an authoritative DNS server for
-  `editor.land`, resolving all subdomains (`*.editor.land`) to
-  `127.0.0.1` for secure local communication.
+  `editor.land`, resolving all subdomains (`*.editor.land`) to `127.0.0.1` for
+  secure local communication.
 - **Forward Security:** Implements a strict allowlist for external DNS queries,
   preventing sidecars from reaching unauthorized external hosts by default.
 - **DNSSEC Support:** Signs the authoritative zone with ECDSA P-256 keys,
@@ -147,14 +147,14 @@ graph LR
 
 ### Components
 
-| File                 | Role                                                                                                   |
-| :------------------- | :----------------------------------------------------------------------------------------------------- |
-| `lib.rs`             | Main library entry point, exports public `API` and manages DNS server state.                           |
-| `Server.rs`          | DNS server implementation using `Hickory`, handles `UDP`/`TCP` listeners and catalog management.       |
-| `Zone.rs`            | DNS zone configuration for `editor.land`, including record definitions and authority creation. |
-| `Resolver.rs`        | DNS resolver for use by other components, provides interface to the local DNS server.                  |
-| `ForwardSecurity.rs` | Forward allowlist management, restricts which external domains can be resolved.                        |
-| `WebSocket.rs`       | WebSocket transport layer for real-time DNS data streaming.                                            |
+| File                 | Role                                                                                             |
+| :------------------- | :----------------------------------------------------------------------------------------------- |
+| `lib.rs`             | Main library entry point, exports public `API` and manages DNS server state.                     |
+| `Server.rs`          | DNS server implementation using `Hickory`, handles `UDP`/`TCP` listeners and catalog management. |
+| `Zone.rs`            | DNS zone configuration for `editor.land`, including record definitions and authority creation.   |
+| `Resolver.rs`        | DNS resolver for use by other components, provides interface to the local DNS server.            |
+| `ForwardSecurity.rs` | Forward allowlist management, restricts which external domains can be resolved.                  |
+| `WebSocket.rs`       | WebSocket transport layer for real-time DNS data streaming.                                      |
 
 ---
 
@@ -273,8 +273,8 @@ let Catalog = build_catalog(5380)?;
   clients to use the local DNS resolver.
 - **SideCar**: Spawns Node.js sidecars with DNS override configuration, ensuring
   all DNS queries go through the local server.
-- **Cocoon**: The Node.js extension host can resolve `editor.land`
-  domains via the local DNS server for gRPC communication with Mountain.
+- **Cocoon**: The Node.js extension host can resolve `editor.land` domains via
+  the local DNS server for gRPC communication with Mountain.
 
 ---
 

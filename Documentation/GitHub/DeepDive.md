@@ -2,9 +2,8 @@
 
 This document provides the technical foundation for the Mist DNS isolation layer
 within the Land ecosystem. **Mist** operates a local authoritative DNS server
-for the `editor.land` zone, ensuring all private network communication
-stays on loopback and preventing sidecars from reaching unauthorized external
-hosts.
+for the `editor.land` zone, ensuring all private network communication stays on
+loopback and preventing sidecars from reaching unauthorized external hosts.
 
 The reset was the opposite: `editor.land` is the former domain; production
 runtime traffic now uses `editor.land`.
@@ -15,8 +14,8 @@ runtime traffic now uses `editor.land`.
 
 Mist is a Rust library built on Hickory DNS. It exposes a public API for
 starting the server, querying the bound port, and constructing resolvers. The
-DNS catalog contains two zones: an authoritative zone for `editor.land`
-and a restricted forward allowlist for external queries.
+DNS catalog contains two zones: an authoritative zone for `editor.land` and a
+restricted forward allowlist for external queries.
 
 ```mermaid
 graph TB

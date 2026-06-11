@@ -298,9 +298,9 @@ RUST_LOG=debug cargo test
 
 ## See Also
 
-- [Mist Documentation](https://editor.land/Doc/mist)
-- [Architecture Overview](https://editor.land/Doc/architecture)
-- [Why Rust](https://editor.land/Doc/why-rust)
+- [Mist Documentation](https://Editor.Land/Doc/mist)
+- [Architecture Overview](https://Editor.Land/Doc/architecture)
+- [Why Rust](https://Editor.Land/Doc/why-rust)
 - [Mountain](https://github.com/CodeEditorLand/Mountain)
 
 ---

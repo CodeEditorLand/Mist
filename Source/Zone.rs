@@ -22,9 +22,13 @@ use hickory_server::{
 	zone_handler::{AxfrPolicy, ZoneType},
 };
 
-/// Creates the `editor.land` authoritative zone records.
+/// Builds the `editor.land` authoritative zone records.
 ///
 /// All `*.editor.land` domains resolve to `127.x.x.x` (loopback).
+///
+/// # Returns
+///
+/// A vector of DNS records (SOA, NS, A) for the `editor.land` zone.
 pub fn EditorLandZone() -> Result<Vec<Record>> {
 	let mut Records = Vec::new();
 
@@ -79,7 +83,11 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 	Ok(Records)
 }
 
-/// Creates an `InMemoryZoneHandler` for the `editor.land` zone.
+/// Builds an `InMemoryZoneHandler` for the `editor.land` zone.
+///
+/// # Returns
+///
+/// An `InMemoryZoneHandler` configured as primary for `editor.land`.
 pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
 	let Origin = Name::from_ascii("editor.land.").unwrap();
 
@@ -91,7 +99,17 @@ pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>
 	Ok(Authority)
 }
 
-/// Creates an `InMemoryZoneHandler` for a custom origin with specified records.
+/// Builds an `InMemoryZoneHandler` for a custom origin with specified records.
+///
+/// # Parameters
+///
+/// * `Origin` — The DNS origin name (e.g. `example.com.`).
+/// * `_Records` — DNS records for the zone (currently unused; the handler
+///   is created empty regardless).
+///
+/// # Returns
+///
+/// An `InMemoryZoneHandler` configured as primary for the given origin.
 pub fn CustomAuthority(Origin:&Name, _Records:Vec<Record>) -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
 	let Authority =
 		InMemoryZoneHandler::<TokioRuntimeProvider>::empty(Origin.clone(), ZoneType::Primary, AxfrPolicy::Deny, None);

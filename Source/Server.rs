@@ -37,6 +37,14 @@ const DNS_TCP_RESPONSE_BUFFER_SIZE:usize = 65_535;
 ///
 /// Creates a catalog with an authoritative zone for `editor.land` that
 /// resolves all queries locally to loopback addresses.
+///
+/// # Parameters
+///
+/// * `_DNSPort` — Unused, reserved for future port-based catalog configuration.
+///
+/// # Returns
+///
+/// A `Catalog` configured with the `editor.land` zone.
 pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 	let mut Catalog = Catalog::new();
 
@@ -68,6 +76,15 @@ pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 ///
 /// Binds to `127.0.0.1:{Port}` for both UDP and TCP. Validates that the
 /// socket is bound to a loopback address before accepting connections.
+///
+/// # Parameters
+///
+/// * `Catalog` — The DNS catalog (zone configuration) to serve.
+/// * `Port` — The loopback port number to bind to.
+///
+/// # Returns
+///
+/// `Ok(())` on graceful shutdown, or an error if binding or serving fails.
 pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 	let Address:SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), Port);
 
@@ -155,6 +172,18 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 }
 
 /// Serves DNS queries synchronously (blocking convenience wrapper).
+///
+/// Creates a temporary Tokio runtime and runs [`Serve`] on it. Useful for
+/// threads or environments that do not manage their own async runtime.
+///
+/// # Parameters
+///
+/// * `Catalog` — The DNS catalog (zone configuration) to serve.
+/// * `Port` — The loopback port number to bind to.
+///
+/// # Returns
+///
+/// `Ok(())` on graceful shutdown, or an error if binding or serving fails.
 pub fn ServeSync(Catalog:Catalog, Port:u16) -> Result<()> {
 	let Runtime = tokio::runtime::Runtime::new()?;
 

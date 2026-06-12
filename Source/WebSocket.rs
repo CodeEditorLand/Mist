@@ -24,9 +24,13 @@
 //!
 //! # Auth
 //!
-//! Per-spawn 32-byte shared secret. The connecting side sends it
-//! in the WebSocket upgrade `X-Land-Secret` header; the server
-//! rejects connections whose header doesn't match. Mountain
+//! Per-spawn 32-byte shared secret. Native clients send it in the
+//! WebSocket upgrade `X-Land-Secret` header; browser clients (Sky)
+//! cannot set custom upgrade headers, so the server also accepts
+//! the hex secret as a `?secret=<hex>` URL query parameter or as a
+//! `Sec-WebSocket-Protocol` subprotocol entry (echoed back in the
+//! accept response, as RFC 6455 requires). Connections presenting
+//! none of the three are rejected with `403 Forbidden`. Mountain
 //! generates the secret at boot, passes it to Cocoon as an env
 //! variable, and exposes it to Sky via the existing
 //! `MountainGetWorkbenchConfiguration` Tauri invoke.
@@ -56,14 +60,21 @@ use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use serde_json::Value;
 use tokio::{
 	net::{TcpListener, TcpStream},
-	sync::{Mutex, oneshot},
+	sync::{Mutex, RwLock, oneshot},
 };
 use tokio_tungstenite::{
 	MaybeTlsStream,
 	WebSocketStream,
 	accept_async,
+	accept_hdr_async,
 	connect_async,
-	tungstenite::{Message, Utf8Bytes},
+	tungstenite::{
+		Message,
+		Utf8Bytes,
+		client::IntoClientRequest,
+		handshake::server::{ErrorResponse, Request, Response},
+		http::{HeaderValue, StatusCode},
+	},
 };
 
 /// Per-spawn shared secret for WebSocket connection auth.
@@ -74,7 +85,6 @@ impl SharedSecret {
 	/// Generates a cryptographically random 32-byte shared secret.
 	///
 	/// Uses the thread-local RNG from `rand` 0.10 via `rand::random`.
-	/// This is the recommended way to create a new secret for a session.
 	pub fn random() -> Self {
 		// rand 0.10: `rand::random::<[u8; N]>()` fills via the
 		// thread-local RNG without needing the deprecated
@@ -114,14 +124,24 @@ impl SharedSecret {
 pub type HandlerFn =
 	Arc<dyn Fn(Value) -> futures_util::future::BoxFuture<'static, Result<Value, String>> + Send + Sync>;
 
-/// Method dispatch table.
+/// Fallback handler signature. Receives the method name alongside the
+/// params so a single closure can forward any unregistered method into
+/// an existing dispatcher.
+pub type DefaultHandlerFn =
+	Arc<dyn Fn(String, Value) -> futures_util::future::BoxFuture<'static, Result<Value, String>> + Send + Sync>;
+
+/// Method dispatch table. Lookups are read-dominated (one per inbound
+/// frame) so the maps sit behind `RwLock`, not `Mutex` - concurrent
+/// connections never serialize on dispatch.
 #[derive(Default)]
 pub struct HandlerRegistry {
-	Handlers:Mutex<HashMap<String, HandlerFn>>,
+	Handlers:RwLock<HashMap<String, HandlerFn>>,
+
+	DefaultHandler:RwLock<Option<DefaultHandlerFn>>,
 }
 
 impl HandlerRegistry {
-	/// Creates a new, empty `HandlerRegistry` wrapped in an `Arc`.
+	/// Builds a new, empty `HandlerRegistry` wrapped in an `Arc`.
 	///
 	/// The registry starts with no methods registered. Use
 	/// [`Register`](Self::Register) to add handlers.
@@ -133,23 +153,43 @@ impl HandlerRegistry {
 	/// the `Handler` closure is invoked with the params `Value`.
 	/// Replaces any previously registered handler for the same name.
 	pub async fn Register(&self, Method:String, Handler:HandlerFn) {
-		self.Handlers.lock().await.insert(Method, Handler);
+		self.Handlers.write().await.insert(Method, Handler);
+	}
+
+	/// Registers the fallback handler invoked for any method that has
+	/// no per-method registration. Replaces any previous fallback.
+	pub async fn RegisterDefault(&self, Handler:DefaultHandlerFn) {
+		*self.DefaultHandler.write().await = Some(Handler);
 	}
 
 	/// Looks up a handler function by method name.
 	///
 	/// Returns `None` if no handler has been registered for the given
 	/// method.
-	pub async fn Lookup(&self, Method:&str) -> Option<HandlerFn> { self.Handlers.lock().await.get(Method).cloned() }
+	pub async fn Lookup(&self, Method:&str) -> Option<HandlerFn> { self.Handlers.read().await.get(Method).cloned() }
+
+	/// Returns the fallback handler, if one has been registered.
+	pub async fn LookupDefault(&self) -> Option<DefaultHandlerFn> { self.DefaultHandler.read().await.clone() }
 }
 
-/// Run a WebSocket server on `127.0.0.1:<port>`. Loops forever
+/// Runs a WebSocket server on `127.0.0.1:<port>`. Loops forever
 /// accepting connections; spawns a task per connection.
 ///
-/// Returns `Err` only on bind failure; per-connection errors are
-/// logged but never propagated (single bad client must not kill the
-/// listener).
-pub async fn ServeLocal(Port:u16, Secret:SharedSecret, Registry:Arc<HandlerRegistry>) -> Result<()> {
+/// `Secret:Some(_)` enforces upgrade-time auth (header, query
+/// parameter, or subprotocol — see the module docs); `Secret:None`
+/// accepts every loopback connection unchecked.
+///
+/// # Parameters
+///
+/// * `Port` — The local port to bind the WebSocket listener to.
+/// * `Secret` — Optional shared secret for upgrade-time authentication.
+/// * `Registry` — The method dispatch table for JSON-RPC handlers.
+///
+/// # Returns
+///
+/// `Err` only on bind failure; per-connection errors are logged but
+/// never propagated (a single bad client must not kill the listener).
+pub async fn ServeLocal(Port:u16, Secret:Option<SharedSecret>, Registry:Arc<HandlerRegistry>) -> Result<()> {
 	let Address = format!("127.0.0.1:{}", Port);
 
 	let Listener = TcpListener::bind(&Address).await?;
@@ -189,14 +229,95 @@ pub async fn ServeLocal(Port:u16, Secret:SharedSecret, Registry:Arc<HandlerRegis
 	}
 }
 
-async fn HandleConnection(Stream:TcpStream, _Secret:SharedSecret, Registry:Arc<HandlerRegistry>) -> Result<()> {
-	// TODO B7-S6 P1.1: validate the X-Land-Secret upgrade header
-	// against `_Secret` here. Stock `accept_async` does not surface
-	// the upgrade headers; we'll switch to the lower-level
-	// `accept_hdr_async` once we've measured the baseline transport
-	// works without auth (loopback-only listener; the practical
-	// attack surface today is "another local process").
-	let WebSocketStream = accept_async(Stream).await?;
+/// Compares a presented credential against the expected hex secret
+/// in constant time.
+///
+/// The byte loop always runs over the full expected length so a
+/// mismatch never leaks its position; a length mismatch also fails
+/// via the same accumulator.
+fn CredentialMatches(Candidate:&str, ExpectedHex:&str) -> bool {
+	let CandidateBytes = Candidate.as_bytes();
+
+	let ExpectedBytes = ExpectedHex.as_bytes();
+
+	let mut Difference = CandidateBytes.len() ^ ExpectedBytes.len();
+
+	for (Index, Expected) in ExpectedBytes.iter().enumerate() {
+		Difference |= usize::from(CandidateBytes.get(Index).copied().unwrap_or(0) ^ Expected);
+	}
+
+	Difference == 0
+}
+
+/// Authorizes a WebSocket upgrade request by checking the shared
+/// secret.
+///
+/// Accepts the request when the hex secret is presented via the
+/// `X-Land-Secret` header, a `?secret=<hex>` query parameter, or a
+/// `Sec-WebSocket-Protocol` subprotocol entry (browser clients).
+/// Matched subprotocols are echoed back, as RFC 6455 requires for
+/// the browser to keep the connection open.
+fn AuthorizeUpgrade(
+	RequestValue:&Request,
+	mut ResponseValue:Response,
+	ExpectedHex:&str,
+) -> Result<Response, ErrorResponse> {
+	let HeaderMatch = RequestValue
+		.headers()
+		.get("X-Land-Secret")
+		.and_then(|V| V.to_str().ok())
+		.map(|V| CredentialMatches(V, ExpectedHex))
+		.unwrap_or(false);
+
+	let QueryMatch = RequestValue
+		.uri()
+		.query()
+		.map(|Query| {
+			Query
+				.split('&')
+				.any(|Pair| Pair.strip_prefix("secret=").map(|V| CredentialMatches(V, ExpectedHex)).unwrap_or(false))
+		})
+		.unwrap_or(false);
+
+	let ProtocolMatch = RequestValue
+		.headers()
+		.get("Sec-WebSocket-Protocol")
+		.and_then(|V| V.to_str().ok())
+		.map(|List| List.split(',').any(|Entry| CredentialMatches(Entry.trim(), ExpectedHex)))
+		.unwrap_or(false);
+
+	if !(HeaderMatch || QueryMatch || ProtocolMatch) {
+		tracing::warn!(target: "Mist::WebSocket", "upgrade rejected: missing or invalid shared secret");
+
+		let mut Rejection = ErrorResponse::new(Some("Forbidden: invalid or missing X-Land-Secret".to_string()));
+
+		*Rejection.status_mut() = StatusCode::FORBIDDEN;
+
+		return Err(Rejection);
+	}
+
+	if ProtocolMatch {
+		if let Ok(Echo) = HeaderValue::from_str(ExpectedHex) {
+			ResponseValue.headers_mut().insert("Sec-WebSocket-Protocol", Echo);
+		}
+	}
+
+	Ok(ResponseValue)
+}
+
+async fn HandleConnection(Stream:TcpStream, Secret:Option<SharedSecret>, Registry:Arc<HandlerRegistry>) -> Result<()> {
+	let WebSocketStream = match Secret {
+		Some(Secret) => {
+			let ExpectedHex = Secret.as_hex();
+
+			accept_hdr_async(Stream, move |RequestValue:&Request, ResponseValue:Response| {
+				AuthorizeUpgrade(RequestValue, ResponseValue, &ExpectedHex)
+			})
+			.await?
+		},
+
+		None => accept_async(Stream).await?,
+	};
 
 	let (mut Sink, mut Source) = WebSocketStream.split();
 
@@ -245,10 +366,22 @@ async fn HandleConnection(Stream:TcpStream, _Secret:SharedSecret, Registry:Arc<H
 					},
 
 					None => {
-						serde_json::json!({
-							"id": Identifier,
-							"error": format!("Unknown method: {}", Method),
-						})
+						match Registry.LookupDefault().await {
+							Some(Default) => {
+								match Default(Method.to_string(), Params).await {
+									Ok(Value) => serde_json::json!({ "id": Identifier, "result": Value }),
+
+									Err(ErrorMessage) => serde_json::json!({ "id": Identifier, "error": ErrorMessage }),
+								}
+							},
+
+							None => {
+								serde_json::json!({
+									"id": Identifier,
+									"error": format!("Unknown method: {}", Method),
+								})
+							},
+						}
 					},
 				};
 
@@ -277,11 +410,13 @@ async fn HandleConnection(Stream:TcpStream, _Secret:SharedSecret, Registry:Arc<H
 	Ok(())
 }
 
-/// Pending-request map: request id → response sender.
+/// Maps request identifiers to their response senders.
 type PendingMap = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
 
-/// Client-side connection. Holds the write half of the WebSocket
-/// and a map of pending requests keyed by id.
+/// Client-side WebSocket connection.
+///
+/// Holds the write half of the WebSocket and a map of pending
+/// requests keyed by identifier.
 pub struct Client {
 	// `connect_async` returns `WebSocketStream<MaybeTlsStream<TcpStream>>`
 	// (the TLS wrapper is a no-op when the URL is `ws://` rather than
@@ -296,13 +431,52 @@ pub struct Client {
 }
 
 impl Client {
-	/// Connect to a Mist WebSocket server at `Address`
+	/// Connects to a Mist WebSocket server at `Address`
 	/// (e.g. `ws://127.0.0.1:5051`). Spawns a background reader
 	/// task that drains incoming frames and resolves pending
 	/// requests.
+	///
+	/// # Parameters
+	///
+	/// * `Address` — The WebSocket server URL (ws:// or wss:// scheme).
+	///
+	/// # Returns
+	///
+	/// A new `Client` instance wrapped in `Arc`.
 	pub async fn connect(Address:&str) -> Result<Arc<Self>> {
 		let (Stream, _Response) = connect_async(Address).await?;
 
+		Ok(Self::FromStream(Stream))
+	}
+
+					/// Connects with the per-spawn shared secret attached as the
+					/// `X-Land-Secret` upgrade header. Native clients (Grove, Cocoon)
+					/// use this against a secret-enforcing [`ServeLocal`] server;
+					/// browser clients use the query-parameter/subprotocol forms
+					/// instead since they cannot set upgrade headers.
+					///
+					/// # Parameters
+					///
+					/// * `Address` — The WebSocket server URL (ws:// or wss:// scheme).
+					/// * `Secret` — The shared secret for upgrade-time authentication.
+					///
+					/// # Returns
+					///
+					/// A new `Client` instance wrapped in `Arc`.
+					pub async fn ConnectWithSecret(Address:&str, Secret:&SharedSecret) -> Result<Arc<Self>> {
+						let mut RequestValue = Address.into_client_request()?;
+
+		RequestValue.headers_mut().insert("X-Land-Secret", HeaderValue::from_str(&Secret.as_hex())?);
+
+		let (Stream, _Response) = connect_async(RequestValue).await?;
+
+		Ok(Self::FromStream(Stream))
+	}
+
+	/// Wraps an established WebSocket stream in a `Client`: splits the
+	/// stream, spawns the reader task, and wires the pending-request
+	/// map.
+	fn FromStream(Stream:WebSocketStream<MaybeTlsStream<TcpStream>>) -> Arc<Self> {
 		let (Sink, mut Source) = Stream.split();
 
 		let Sink = Arc::new(Mutex::new(Sink));
@@ -362,7 +536,7 @@ impl Client {
 			}
 		});
 
-		Ok(SelfReference)
+		SelfReference
 	}
 
 	/// Invoke a remote method. Returns the result Value or an error

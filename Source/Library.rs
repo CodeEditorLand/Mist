@@ -79,22 +79,21 @@ pub mod WebSocket;
 
 /// Global DNS port number.
 ///
-/// This static cell stores the port number that the DNS server is running on.
-/// It is set once when [`start`] is called and remains constant thereafter.
+/// Stores the port number that the DNS server is running on.
+/// Set once when [`start`] is called and remains constant thereafter.
 ///
 /// # Example
 ///
 /// ```rust
 /// use Mist::dns_port;
 ///
-/// // Returns the port number, or 0 if the server hasn't been started
 /// let port = dns_port();
 /// ```
 pub static DNS_PORT:OnceCell<u16> = OnceCell::new();
 
 /// Returns the DNS port number.
 ///
-/// Returns the port that the DNS server is listening on, or `0` if the
+/// Provides the port that the DNS server is listening on, or `0` if the
 /// server has not been started yet.
 ///
 /// # Returns
@@ -117,7 +116,7 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 
 /// Starts the DNS server for the CodeEditorLand private network.
 ///
-/// This function performs the following steps:
+/// Performs the following steps:
 /// 1. Uses portpicker to find an available port (tries `preferred_port` first)
 /// 2. Sets the `DNS_PORT` global variable
 /// 3. Builds the DNS catalog with the `editor.land` zone

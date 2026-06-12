@@ -20,6 +20,10 @@ use hickory_proto::rr::Name;
 ///
 /// Domains in the allowlist may be forwarded to upstream DNS servers.
 /// All other domains receive `REFUSED`.
+///
+/// # Returns
+///
+/// An iterator of parseable `Name` values for allowed forward domains.
 pub fn DefaultForwardAllowlist() -> impl Iterator<Item = Result<Name>> {
 	vec![Name::from_ascii("update.editor.land.")]
 		.into_iter()

@@ -8,11 +8,11 @@ use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 /// Stub DNS resolver type.
 ///
-/// In production this would wrap a real hickory-client resolver connected
+/// In production this wraps a real hickory-client resolver connected
 /// to the local DNS server.
 pub struct TokioResolver;
 
-/// Creates a `TokioResolver` stub that queries the local DNS server.
+/// Builds a `TokioResolver` stub that queries the local DNS server.
 pub fn LandResolver(_DNSPort:u16) -> TokioResolver { TokioResolver }
 
 /// Secured DNS resolver for use with `reqwest`'s DNS override.
@@ -22,13 +22,13 @@ pub fn LandResolver(_DNSPort:u16) -> TokioResolver { TokioResolver }
 pub struct LandDnsResolver;
 
 impl LandDnsResolver {
-	/// Creates a new `LandDnsResolver` connected to the given DNS port.
+	/// Builds a new `LandDnsResolver` connected to the given DNS port.
 	///
 	/// This is the PascalCase variant, matching the project's naming
 	/// convention for constructors. See also [`new`](Self::new).
 	pub fn New(_Port:u16) -> Self { Self }
 
-	/// Creates a new `LandDnsResolver` (snake_case alias for reqwest).
+	/// Builds a new `LandDnsResolver` (snake_case alias for reqwest).
 	///
 	/// This variant exists for compatibility with the `reqwest::dns::Resolve`
 	/// trait's expected construction pattern. Both this and [`New`](Self::New)

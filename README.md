@@ -1,4 +1,4 @@
-# **Mist** 🌫️
+# **Mist**&#x2001;🌫️
 
 <table>
 	<tr>
@@ -50,7 +50,7 @@ DNS isolation for the editor.land private network.
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Mist/tree/Current/LICENSE)
 
-**[Rust API Documentation](https://Rust.Documentation.editor.land/Mist/)** 📖
+**[Rust API Documentation](https://Rust.Documentation.editor.land/Mist/)**&#x2001;📖
 
 ---
 
@@ -257,7 +257,7 @@ RUST_LOG=debug cargo test
 
 ## API Reference
 
-- [Rust API Documentation](https://Rust.Documentation.editor.land/Mist/) 📖
+- [Rust API Documentation](https://Rust.Documentation.editor.land/Mist/)&#x2001;📖
 
 ## Related Documentation
 

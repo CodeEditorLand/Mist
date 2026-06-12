@@ -1,9 +1,9 @@
 # Mist - Deep Dive
 
-Mist provides the technical foundation DNS isolation layer
-within the Land ecosystem. **Mist** operates a local authoritative DNS server
-for the `editor.land` zone, ensuring all private network communication stays on
-loopback and preventing sidecars from reaching unauthorized external hosts.
+Mist provides the technical foundation DNS isolation layer within the Land
+ecosystem. **Mist** operates a local authoritative DNS server for the
+`editor.land` zone, ensuring all private network communication stays on loopback
+and preventing sidecars from reaching unauthorized external hosts.
 
 The reset was the opposite: `editor.land` is the former domain; production
 runtime traffic now uses `editor.land`.

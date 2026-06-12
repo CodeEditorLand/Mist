@@ -1,7 +1,26 @@
-# Mist: DNS Isolation Server 🌫️
+<table>
+	<tr>
+		<td colspan="1">
+			<h3 align="center">
+				<picture>
+					<source media="(prefers-color-scheme: dark)" srcset="https://editor.land/Dark/Image/GitHub/Land.svg">
+					<source media="(prefers-color-scheme: light)" srcset="https://editor.land/Image/GitHub/Land.svg">
+					<img width="28" alt="Land Logo" src="https://editor.land/Image/GitHub/Land.svg">
+				</picture>
+			</h3>
+		</td>
+		<td colspan="3" valign="top">
+			<h3 align="center"> Mist 🌫️</h3>
+		</td>
+	</tr>
+</table>
 
-This document describes `Mist`, a local DNS server that provides network
-isolation for `Land`'s sidecar processes:
+---
+
+# **Mist** 🌫️ Architecture
+
+`Mist` is a local DNS server that provides network isolation for `Land`'s
+sidecar processes:
 
 - Runs an authoritative DNS server for the `editor.land` zone
 - Resolves all subdomains to `127.0.0.1`

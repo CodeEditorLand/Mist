@@ -362,9 +362,9 @@ Mist is designed to be compatible with:
 ## Related Documentation
 
 - [Architecture Overview](https://github.com/CodeEditorLand/Mist/tree/Current/Documentation/GitHub/Architecture.md)
-  - Internal module structure
+    - Internal module structure
 - [Deep Dive](https://github.com/CodeEditorLand/Mist/tree/Current/Documentation/GitHub/DeepDive.md)
-  - In-depth technical details
+    - In-depth technical details
 - [Land Documentation](../../Documentation/GitHub/README.md) - Complete
   documentation index
 - **Air** 🪁 - Background daemon that consumes Mist for HTTP client DNS -
@@ -374,7 +374,7 @@ Mist is designed to be compatible with:
 - **Mountain** ⛰️ - Main application process -
   [GitHub](https://github.com/CodeEditorLand/Mountain)
 - [CHANGELOG](https://github.com/CodeEditorLand/Mist/tree/Current/CHANGELOG.md)
-  - Version history
+    - Version history
 
 ---
 

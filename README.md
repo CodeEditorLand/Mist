@@ -24,7 +24,7 @@
 				<picture>
 					<source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/github/stars/CodeEditorLand/Mist?style=flat&label=Star&logo=github&color=black&labelColor=black&logoColor=white&logoWidth=0" />
 					<source media="(prefers-color-scheme: light)" srcset="https://img.shields.io/github/stars/CodeEditorLand/Mist?style=flat&label=Star&logo=github&color=white&labelColor=white&logoColor=black&logoWidth=0" />
-					<img src="https://img.shields.io/github/stars/CodeEditorLand/Mist?style=flat&label=Star&logo=github&color=black&labelColor=black&logoColor=white&logoWidth=0" alt="Star" />
+					<img src="https://img.shields.io/github/stars/CodeEditorLand/Mist?style=flat&label=Star&logo=github&color=black&labelColor=black&logoColor=white&logoWidth=0" alt="Star" title="Star" />
 				</picture>
 			</a>
 			<br />
@@ -39,16 +39,18 @@
 	</tr>
 </table>
 
-DNS isolation for the editor.land private network.
+DNS isolation for the `editor.land` private network.
 
 > **Development environments that communicate over the public internet expose
 > services to unnecessary risk. DNS resolution for local services goes through
 > external resolvers, leaking information about the development setup.**
->
-> _"Nothing leaks to the public internet. A clean network boundary between the
-> editor and the outside world."_
+
+_"Nothing leaks to the public internet. A clean network boundary between the
+editor and the outside world."_
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Mist/tree/Current/LICENSE)
+[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Crates.io](https://img.shields.io/crates/v/Mist.svg)](https://crates.io/crates/Mist)
+[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Rust Version](https://img.shields.io/badge/Rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 
 **[Rust API Documentation](https://rust.documentation.mist.editor.land/)**&#x2001;📖
 
@@ -77,8 +79,8 @@ every query stays on the machine, and nothing escapes to the public internet.
    `update.editor.land`).
 3. **Support DNSSEC** — Sign the `editor.land` zone with ECDSA P-256 keys
    for DNSSEC, providing cryptographic assurance of DNS responses.
-4. **Enable Sidecar Isolation** — Allow Node.js sidecars (like **Cocoon**) to
-   use the local DNS server via a custom DNS override, ensuring they cannot
+4. **Enable Sidecar Isolation** — Allow `Node.js` sidecars (like **Cocoon**)
+   to use the local DNS server via a custom DNS override, ensuring they cannot
    access arbitrary external hosts.
 
 ---
@@ -104,7 +106,7 @@ configurable starting port and falls back to system-assigned ports when
 needed.
 
 **WebSocket Transport** — Real-time DNS data streaming over WebSocket for
-local-first JSON-RPC communication between editor components. Supports
+local-first `JSON`-RPC communication between editor components. Supports
 secure, low-latency message delivery within the private network.
 
 **Loopback Binding** — The DNS server binds exclusively to `127.0.0.1`,
@@ -135,16 +137,16 @@ graph LR
     classDef external fill:#ebebeb,stroke:#888,stroke-width:1px,stroke-dasharray:5 5,color:#333;
 
     subgraph CONSUMERS["Land Components - DNS Clients"]
-        Mountain["Mountain ⛰️\\nstarts Mist, reads DnsPort"]:::consumer
-        Cocoon["Cocoon 🦋\\nNode.js sidecar (DNS override)"]:::consumer
-        Air["Air 🪁\\nHTTP client with custom DNS"]:::consumer
+        Mountain["Mountain ⛰️\nstarts Mist, reads DnsPort"]:::consumer
+        Cocoon["Cocoon 🦋\nNode.js sidecar (DNS override)"]:::consumer
+        Air["Air 🪁\nHTTP client with custom DNS"]:::consumer
     end
 
     subgraph MIST["Mist 🌫️ - Local DNS Server (127.0.0.1:PORT)"]
         direction TB
-        Server["Server.rs - Hickory DNS\\nUDP + TCP listeners"]:::mist
-        Zone["Zone.rs - Authoritative Zone\\n*.editor.land → 127.0.0.1\\nDNSSEC signed ECDSA P-256"]:::zone
-        Forward["ForwardSecurity.rs - Allowlist\\nupdate.editor.land only"]:::forward
+        Server["Server.rs - Hickory DNS\nUDP + TCP listeners"]:::mist
+        Zone["Zone.rs - Authoritative Zone\n*.editor.land → 127.0.0.1\nDNSSEC signed ECDSA P-256"]:::zone
+        Forward["ForwardSecurity.rs - Allowlist\nupdate.editor.land only"]:::forward
         Resolver["Resolver.rs - LandDnsResolver"]:::mist
         WSTransport["WebSocket.rs - DNS data stream"]:::mist
 
@@ -155,7 +157,7 @@ graph LR
     end
 
     subgraph INTERNET["External ☁️"]
-        UpdateServer["update.editor.land\\nallowlisted only"]:::external
+        UpdateServer["update.editor.land\nallowlisted only"]:::external
     end
 
     Mountain -- spawns + DnsPort --> Server
@@ -169,7 +171,7 @@ graph LR
 | Path | Protocol | Use Case |
 |------|----------|----------|
 | Mountain → Mist | Process spawn + port handoff | Application initialization, reads `DnsPort` managed state |
-| Cocoon → Mist | DNS over UDP/TCP to `127.0.0.1` | Node.js sidecar DNS resolution for `editor.land` domains |
+| Cocoon → Mist | DNS over UDP/TCP to `127.0.0.1` | `Node.js` sidecar DNS resolution for `editor.land` domains |
 | Air → Mist | `LandDnsResolver` (Hickory client) | HTTP client DNS configured to use local resolver |
 | Mist → External | UDP DNS (allowlisted only) | Forwarding queries for `update.editor.land` |
 
@@ -191,7 +193,7 @@ graph LR
 ## Project Structure&#x2001;🗺️
 
 ```
-Element/Mist/
+Mist/
 ├── Source/
 │   ├── Library.rs              # Library root, DNS server lifecycle
 │   ├── Server.rs               # Hickory DNS server (UDP/TCP listeners)
@@ -201,12 +203,13 @@ Element/Mist/
 │   └── WebSocket.rs            # JSON-RPC over WebSocket transport
 ├── tests/
 │   └── integration.rs          # Integration test suite
-└── Documentation/
-    ├── GitHub/
-    │   ├── Architecture.md     # Internal module design
-    │   └── DeepDive.md         # In-depth technical details
-    └── Rust/
-        └── doc/                # Cargo doc output
+├── Documentation/
+│   ├── GitHub/
+│   │   ├── Architecture.md     # Internal module design
+│   │   └── DeepDive.md         # In-depth technical details
+│   └── Rust/
+│       └── doc/                # Cargo doc output
+└── Cargo.toml
 ```
 
 ---
@@ -219,16 +222,16 @@ leakage. External DNS queries are restricted to a strict allowlist.
 
 **Mist** is part of the networking/IPC connectivity stack alongside **Air** 🪁
 (background daemon, uses Mist's DNS resolver for its HTTP client) and **Vine**
-🍇 (gRPC protocol layer).
+🌿 (`gRPC` protocol layer).
 
 ### Integration
 
 | Consumer | How Mist is Used |
-| :------- | :--------------- |
+|----------|------------------|
 | **Mountain** ⛰️ | Starts the DNS server during application initialization and provides the port to other components via the `DnsPort` managed state. |
 | **Air** 🪁 | Uses the DNS server for secure HTTP requests, configuring HTTP clients to use the local DNS resolver. |
-| **SideCar** | Spawns Node.js sidecars with DNS override configuration, ensuring all DNS queries go through the local server. |
-| **Cocoon** 🦋 | The Node.js extension host can resolve `editor.land` domains via the local DNS server for gRPC communication with Mountain. |
+| **SideCar** 🏍️ | Spawns `Node.js` sidecars with DNS override configuration, ensuring all DNS queries go through the local server. |
+| **Cocoon** 🦋 | The `Node.js` extension host can resolve `editor.land` domains via the local DNS server for `gRPC` communication with Mountain. |
 
 ### DNS Zone Configuration
 
@@ -307,21 +310,21 @@ let Resolver = land_resolver(Port);
 let Resolver = LandDnsResolver::new(Port);
 ```
 
-### Dependencies
+### Key Dependencies
 
-| Crate | Version | Purpose |
-| :---- | :------ | :------ |
-| `hickory-server` | `0.24` | DNS server implementation |
-| `hickory-proto` | `0.24` | DNS protocol implementation |
-| `hickory-client` | `0.24` | DNS client for resolvers |
-| `ring` | `0.17` | Cryptographic signing for DNSSEC |
-| `tokio` | `1.49` | Async runtime |
-| `anyhow` | `1.0` | Error handling |
-| `tracing` | `0.1` | Logging and instrumentation |
-| `once_cell` | `1.21` | Thread-safe lazy initialization |
-| `portpicker` | `0.1.1` | Random port selection |
-| `async-trait` | `0.1` | Async trait support |
-| `reqwest` | `0.13` | HTTP client with DNS integration |
+| Crate | Purpose |
+|-------|---------|
+| `hickory-server` | DNS server implementation |
+| `hickory-proto` | DNS protocol implementation |
+| `hickory-client` | DNS client for resolvers |
+| `ring` | Cryptographic signing for DNSSEC |
+| `tokio` | Async runtime |
+| `anyhow` | Error handling |
+| `tracing` | Logging and instrumentation |
+| `once_cell` | Thread-safe lazy initialization |
+| `portpicker` | Random port selection |
+| `async-trait` | Async trait support |
+| `reqwest` | HTTP client with DNS integration |
 
 ---
 
@@ -338,9 +341,22 @@ Mist enforces security at multiple layers:
 
 ---
 
+## Compatibility
+
+Mist is designed to be compatible with:
+
+| Target | Integration |
+|--------|-------------|
+| **Mountain** ⛰️ | Starts the DNS server at initialization and distributes `DnsPort` via managed state |
+| **Air** 🪁 | Uses `LandDnsResolver` as `reqwest` DNS override for secure HTTP requests |
+| **Cocoon** 🦋 | Resolves `editor.land` domains through the local DNS server for `gRPC` IPC |
+| **SideCar** 🏍️ | Spawns `Node.js` sidecars with DNS override pointing at the local server |
+
+---
+
 ## API Reference
 
-- [Rust API Documentation](https://rust.documentation.mist.editor.land/)&#x2001;📖
+- **[Rust API Documentation](https://rust.documentation.mist.editor.land/)**&#x2001;📖
 
 ---
 
@@ -354,10 +370,12 @@ Mist enforces security at multiple layers:
     documentation index
 - **Air** 🪁 — Background daemon that consumes Mist for HTTP client DNS —
     [GitHub](https://github.com/CodeEditorLand/Air)
-- **Vine** 🍇 — gRPC protocol layer —
+- **Vine** 🌿 — `gRPC` protocol layer —
     [GitHub](https://github.com/CodeEditorLand/Vine)
 - **Mountain** ⛰️ — Main application process —
     [GitHub](https://github.com/CodeEditorLand/Mountain)
+- [CHANGELOG](https://github.com/CodeEditorLand/Mist/tree/Current/CHANGELOG.md)
+    — Version history
 
 ---
 
@@ -397,9 +415,3 @@ the open-source steward for Code Editor Land under the NGI0 Commons Fund grant.
 		</tr>
 	</tbody>
 </table>
-
----
-
-**Project Maintainers**: Source Open (Source/Open@editor.land) |
-[GitHub Repository](https://github.com/CodeEditorLand/Mist) |
-[Report an Issue](https://github.com/CodeEditorLand/Mist/issues) |

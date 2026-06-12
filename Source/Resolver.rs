@@ -36,7 +36,8 @@ pub fn LandResolver(_DNSPort:u16) -> TokioResolver { TokioResolver }
 pub struct LandDnsResolver;
 
 impl LandDnsResolver {
-	/// Builds a new `LandDnsResolver` connected to the given DNS port (PascalCase).
+	/// Builds a new `LandDnsResolver` connected to the given DNS port
+	/// (PascalCase).
 	///
 	/// Matches the project's naming convention for constructors.
 	/// See also [`new`](Self::new).

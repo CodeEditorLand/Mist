@@ -7,7 +7,8 @@
 //! ## Functions
 //!
 //! * [`EditorLandZone`] — Generates the zone records (SOA, NS, A).
-//! * [`EditorLandAuthority`] — Builds an `InMemoryZoneHandler` for `editor.land`.
+//! * [`EditorLandAuthority`] — Builds an `InMemoryZoneHandler` for
+//!   `editor.land`.
 //! * [`CustomAuthority`] — Builds a handler for an arbitrary DNS origin.
 
 use anyhow::Result;
@@ -113,8 +114,8 @@ pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>
 /// ## Parameters
 ///
 /// * `Origin` — The DNS origin name (e.g. `example.com.`).
-/// * `_Records` — DNS records for the zone (currently unused; the handler
-///   is created empty regardless).
+/// * `_Records` — DNS records for the zone (currently unused; the handler is
+///   created empty regardless).
 ///
 /// ## Returns
 ///

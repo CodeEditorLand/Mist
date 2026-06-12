@@ -105,9 +105,9 @@ pub static DNS_PORT:OnceCell<u16> = OnceCell::new();
 /// use Mist::dns_port;
 /// let port = dns_port();
 /// if port > 0 {
-///     println!("DNS server is running on port {}", port);
+/// 	println!("DNS server is running on port {}", port);
 /// } else {
-///     println!("DNS server has not been started");
+/// 	println!("DNS server has not been started");
 /// }
 /// ```
 pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
@@ -141,11 +141,11 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-///     // Start DNS server, preferring port 5353
-///     let port = start(5353)?;
-///     println!("DNS server started on port {}", port);
-///     tokio::signal::ctrl_c().await?;
-///     Ok(())
+/// 	// Start DNS server, preferring port 5353
+/// 	let port = start(5353)?;
+/// 	println!("DNS server started on port {}", port);
+/// 	tokio::signal::ctrl_c().await?;
+/// 	Ok(())
 /// }
 /// ```
 pub fn start(preferred_port:u16) -> Result<u16> {

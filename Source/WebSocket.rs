@@ -219,7 +219,6 @@ pub async fn ServeLocal(Port:u16, Secret:Option<SharedSecret>, Registry:Arc<Hand
 	CommonLibrary::Telemetry::CaptureEvent::Fn(
 		"land:mist:server:start",
 		Some(vec![("address", Address.as_str()), ("port", PortStr.as_str())]),
-
 	);
 
 	loop {
@@ -275,7 +274,9 @@ fn CredentialMatches(Candidate:&str, ExpectedHex:&str) -> bool {
 /// the browser to keep the connection open.
 fn AuthorizeUpgrade(
 	RequestValue:&Request,
+
 	mut ResponseValue:Response,
+
 	ExpectedHex:&str,
 ) -> Result<Response, ErrorResponse> {
 	let HeaderMatch = RequestValue
@@ -289,9 +290,11 @@ fn AuthorizeUpgrade(
 		.uri()
 		.query()
 		.map(|Query| {
-			Query
-				.split('&')
-				.any(|Pair| Pair.strip_prefix("secret=").map(|V| CredentialMatches(V, ExpectedHex)).unwrap_or(false))
+			Query.split('&').any(|Pair| {
+				Pair.strip_prefix("secret=")
+					.map(|V| CredentialMatches(V, ExpectedHex))
+					.unwrap_or(false)
+			})
 		})
 		.unwrap_or(false);
 
@@ -482,7 +485,9 @@ impl Client {
 	pub async fn ConnectWithSecret(Address:&str, Secret:&SharedSecret) -> Result<Arc<Self>> {
 		let mut RequestValue = Address.into_client_request()?;
 
-		RequestValue.headers_mut().insert("X-Land-Secret", HeaderValue::from_str(&Secret.as_hex())?);
+		RequestValue
+			.headers_mut()
+			.insert("X-Land-Secret", HeaderValue::from_str(&Secret.as_hex())?);
 
 		let (Stream, _Response) = connect_async(RequestValue).await?;
 

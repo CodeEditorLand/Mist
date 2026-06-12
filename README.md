@@ -66,20 +66,20 @@ allowlist, preventing sidecars from accessing arbitrary external hosts.
 
 Editor components need to discover each other on the private network, but
 standard DNS resolution leaks queries to external resolvers. Mist solves this by
-running a local authoritative DNS server for the `editor.land` zone — every
+running a local authoritative DNS server for the `editor.land` zone - every
 query stays on the machine, and nothing escapes to the public internet.
 
 **Mist is engineered to:**
 
-1. **Provide Private DNS Resolution** — Operate a local DNS server authoritative
+1. **Provide Private DNS Resolution** - Operate a local DNS server authoritative
    for the `editor.land` zone, resolving all subdomains to `127.0.0.1` for
    secure local communication.
-2. **Enforce Forward Security** — Implement a forward allowlist that only
+2. **Enforce Forward Security** - Implement a forward allowlist that only
    permits DNS resolution to specific, trusted external domains (e.g.,
    `update.editor.land`).
-3. **Support DNSSEC** — Sign the `editor.land` zone with ECDSA P-256 keys for
+3. **Support DNSSEC** - Sign the `editor.land` zone with ECDSA P-256 keys for
    DNSSEC, providing cryptographic assurance of DNS responses.
-4. **Enable Sidecar Isolation** — Allow `Node.js` sidecars (like **Cocoon**) to
+4. **Enable Sidecar Isolation** - Allow `Node.js` sidecars (like **Cocoon**) to
    use the local DNS server via a custom DNS override, ensuring they cannot
    access arbitrary external hosts.
 
@@ -87,28 +87,28 @@ query stays on the machine, and nothing escapes to the public internet.
 
 ## Key Features&#x2001;🔒
 
-**Private DNS Zone** — Authoritative zone for `*.editor.land` domains. All
+**Private DNS Zone** - Authoritative zone for `*.editor.land` domains. All
 subdomains resolve to `127.0.0.1`, creating a fully isolated private network for
 the editor's internal services. No DNS queries ever leave the machine.
 
-**Forward Security** — Allowlist-based DNS forwarding prevents sidecars from
+**Forward Security** - Allowlist-based DNS forwarding prevents sidecars from
 reaching arbitrary external hosts. Only explicitly trusted domains (such as
 `update.editor.land`) can be resolved externally. All other queries are refused
 by default.
 
-**DNSSEC Signing** — The `editor.land` zone is signed with ECDSA P-256 keys,
+**DNSSEC Signing** - The `editor.land` zone is signed with ECDSA P-256 keys,
 providing cryptographic assurance of DNS responses. Clients can verify the
 authenticity of every DNS record through `DNSKEY` and `RRSIG` records.
 
-**Dynamic Port Allocation** — Automatically finds available ports using
+**Dynamic Port Allocation** - Automatically finds available ports using
 `portpicker`, avoiding port conflicts with other services. Prefers a
 configurable starting port and falls back to system-assigned ports when needed.
 
-**WebSocket Transport** — Real-time DNS data streaming over WebSocket for
+**WebSocket Transport** - Real-time DNS data streaming over WebSocket for
 local-first `JSON`-RPC communication between editor components. Supports secure,
 low-latency message delivery within the private network.
 
-**Loopback Binding** — The DNS server binds exclusively to `127.0.0.1`, ensuring
+**Loopback Binding** - The DNS server binds exclusively to `127.0.0.1`, ensuring
 no external host can query the private DNS server. Combined with the forward
 allowlist, this creates a complete network boundary.
 
@@ -234,20 +234,20 @@ leakage. External DNS queries are restricted to a strict allowlist.
 
 ### DNS Zone Configuration
 
-**Authoritative Zone: `editor.land`** — All subdomains of `editor.land` resolve
+**Authoritative Zone: `editor.land`** - All subdomains of `editor.land` resolve
 to `127.0.0.1`:
 
 - `code.editor.land` → `127.0.0.1`
 - `api.editor.land` → `127.0.0.1`
 - `*.editor.land` → `127.0.0.1`
 
-**Forward Allowlist** — Only allowlisted external domains can be resolved:
+**Forward Allowlist** - Only allowlisted external domains can be resolved:
 
-- `update.editor.land` — For application updates
+- `update.editor.land` - For application updates
 
 All other external queries are refused by default.
 
-**DNSSEC** — The `editor.land` zone is signed with ECDSA P-256 keys:
+**DNSSEC** - The `editor.land` zone is signed with ECDSA P-256 keys:
 
 - `DNSKEY` records provide the public signing key
 - `RRSIG` records provide cryptographic signatures
@@ -260,7 +260,7 @@ All other external queries are refused by default.
 ### Prerequisites
 
 - **Rust** 1.75 or later
-- No system DNS configuration required — Mist binds to `127.0.0.1` only
+- No system DNS configuration required - Mist binds to `127.0.0.1` only
 
 ### Build
 
@@ -362,19 +362,19 @@ Mist is designed to be compatible with:
 ## Related Documentation
 
 - [Architecture Overview](https://github.com/CodeEditorLand/Mist/tree/Current/Documentation/GitHub/Architecture.md)
-  — Internal module structure
+  - Internal module structure
 - [Deep Dive](https://github.com/CodeEditorLand/Mist/tree/Current/Documentation/GitHub/DeepDive.md)
-  — In-depth technical details
-- [Land Documentation](../../Documentation/GitHub/README.md) — Complete
+  - In-depth technical details
+- [Land Documentation](../../Documentation/GitHub/README.md) - Complete
   documentation index
-- **Air** 🪁 — Background daemon that consumes Mist for HTTP client DNS —
+- **Air** 🪁 - Background daemon that consumes Mist for HTTP client DNS -
   [GitHub](https://github.com/CodeEditorLand/Air)
-- **Vine** 🌿 — `gRPC` protocol layer —
+- **Vine** 🌿 - `gRPC` protocol layer -
   [GitHub](https://github.com/CodeEditorLand/Vine)
-- **Mountain** ⛰️ — Main application process —
+- **Mountain** ⛰️ - Main application process -
   [GitHub](https://github.com/CodeEditorLand/Mountain)
 - [CHANGELOG](https://github.com/CodeEditorLand/Mist/tree/Current/CHANGELOG.md)
-  — Version history
+  - Version history
 
 ---
 

@@ -86,7 +86,6 @@ pub mod WebSocket;
 ///
 /// ```rust
 /// use Mist::dns_port;
-///
 /// let port = dns_port();
 /// ```
 pub static DNS_PORT:OnceCell<u16> = OnceCell::new();
@@ -96,20 +95,19 @@ pub static DNS_PORT:OnceCell<u16> = OnceCell::new();
 /// Provides the port that the DNS server is listening on, or `0` if the
 /// server has not been started yet.
 ///
-/// # Returns
+/// ## Returns
 ///
-/// The port number (0-65535), or 0 if the server hasn't started.
+/// The port number (0–65535), or `0` if the server hasn't been started.
 ///
-/// # Example
+/// ## Example
 ///
 /// ```rust
 /// use Mist::dns_port;
-///
 /// let port = dns_port();
 /// if port > 0 {
-/// 	println!("DNS server is running on port {}", port);
+///     println!("DNS server is running on port {}", port);
 /// } else {
-/// 	println!("DNS server has not been started");
+///     println!("DNS server has not been started");
 /// }
 /// ```
 pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
@@ -126,28 +124,28 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// The DNS server runs in the background and can be stopped by dropping
 /// the application.
 ///
-/// # Parameters
+/// ## Parameters
 ///
-/// * `preferred_port` - The preferred port number to use. If this port is
+/// * `preferred_port` — The preferred port number to use. If this port is
 ///   already in use, portpicker will find an alternative available port.
 ///
-/// # Returns
+/// ## Returns
 ///
-/// Returns `Ok(port)` with the port number the server is listening on,
+/// `Ok(port)` with the port number the server is listening on,
 /// or an error if the server failed to start.
 ///
-/// # Example
+/// ## Example
 ///
 /// ```rust,no_run
 /// use Mist::start;
 ///
 /// #[tokio::main]
 /// async fn main() -> anyhow::Result<()> {
-/// 	// Start DNS server, preferring port 5353
-/// 	let port = start(5353)?;
-/// 	println!("DNS server started on port {}", port);
-/// 	tokio::signal::ctrl_c().await?;
-/// 	Ok(())
+///     // Start DNS server, preferring port 5353
+///     let port = start(5353)?;
+///     println!("DNS server started on port {}", port);
+///     tokio::signal::ctrl_c().await?;
+///     Ok(())
 /// }
 /// ```
 pub fn start(preferred_port:u16) -> Result<u16> {

@@ -3,6 +3,12 @@
 //! Provides DNS zone configuration for the CodeEditorLand private network.
 //! Creates an authoritative zone for `editor.land` that resolves to
 //! loopback addresses.
+//!
+//! ## Functions
+//!
+//! * [`EditorLandZone`] — Generates the zone records (SOA, NS, A).
+//! * [`EditorLandAuthority`] — Builds an `InMemoryZoneHandler` for `editor.land`.
+//! * [`CustomAuthority`] — Builds a handler for an arbitrary DNS origin.
 
 use anyhow::Result;
 use hickory_proto::rr::{
@@ -26,7 +32,7 @@ use hickory_server::{
 ///
 /// All `*.editor.land` domains resolve to `127.x.x.x` (loopback).
 ///
-/// # Returns
+/// ## Returns
 ///
 /// A vector of DNS records (SOA, NS, A) for the `editor.land` zone.
 pub fn EditorLandZone() -> Result<Vec<Record>> {
@@ -85,7 +91,10 @@ pub fn EditorLandZone() -> Result<Vec<Record>> {
 
 /// Builds an `InMemoryZoneHandler` for the `editor.land` zone.
 ///
-/// # Returns
+/// Creates a primary zone authority that serves the `editor.land` domain
+/// with AXFR transfers disabled.
+///
+/// ## Returns
 ///
 /// An `InMemoryZoneHandler` configured as primary for `editor.land`.
 pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {
@@ -101,13 +110,13 @@ pub fn EditorLandAuthority() -> Result<InMemoryZoneHandler<TokioRuntimeProvider>
 
 /// Builds an `InMemoryZoneHandler` for a custom origin with specified records.
 ///
-/// # Parameters
+/// ## Parameters
 ///
 /// * `Origin` — The DNS origin name (e.g. `example.com.`).
 /// * `_Records` — DNS records for the zone (currently unused; the handler
 ///   is created empty regardless).
 ///
-/// # Returns
+/// ## Returns
 ///
 /// An `InMemoryZoneHandler` configured as primary for the given origin.
 pub fn CustomAuthority(Origin:&Name, _Records:Vec<Record>) -> Result<InMemoryZoneHandler<TokioRuntimeProvider>> {

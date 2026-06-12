@@ -2,6 +2,12 @@
 //!
 //! Builds and serves the private DNS catalog for CodeEditorLand.
 //! Binds exclusively to loopback (`127.0.0.1`) to prevent LAN exposure.
+//!
+//! ## Functions
+//!
+//! * [`BuildCatalog`] — Constructs the DNS catalog with `editor.land` zone.
+//! * [`Serve`] — Runs the async DNS server on a loopback port.
+//! * [`ServeSync`] — Blocking convenience wrapper around [`Serve`].
 
 use std::{
 	net::{IpAddr, Ipv4Addr, SocketAddr},
@@ -25,12 +31,13 @@ use hickory_server::{
 };
 use tokio::net::UdpSocket;
 
-/// Buffer capacity for outgoing DNS TCP responses per connection. 65 535 is
-/// the upper bound a single DNS message can reach over TCP (the 16-bit
-/// length prefix cap from RFC 1035 §4.2.2). Picking the cap avoids any
-/// truncation for zone-transfer or large TXT responses while staying well
-/// within memory for the dozen-or-so concurrent connections a local
-/// `editor.land` catalog ever sees.
+/// Buffer capacity for outgoing DNS TCP responses per connection.
+///
+/// 65 535 is the upper bound a single DNS message can reach over TCP
+/// (the 16-bit length prefix cap from RFC 1035 §4.2.2). Picking the cap
+/// avoids any truncation for zone-transfer or large TXT responses while
+/// staying well within memory for the dozen-or-so concurrent connections
+/// a local `editor.land` catalog ever sees.
 const DNS_TCP_RESPONSE_BUFFER_SIZE:usize = 65_535;
 
 /// Builds a DNS catalog for the CodeEditorLand private network.
@@ -38,11 +45,11 @@ const DNS_TCP_RESPONSE_BUFFER_SIZE:usize = 65_535;
 /// Creates a catalog with an authoritative zone for `editor.land` that
 /// resolves all queries locally to loopback addresses.
 ///
-/// # Parameters
+/// ## Parameters
 ///
-/// * `_DNSPort` — Unused, reserved for future port-based catalog configuration.
+/// * `_DNSPort` — Reserved for future port-based catalog configuration.
 ///
-/// # Returns
+/// ## Returns
 ///
 /// A `Catalog` configured with the `editor.land` zone.
 pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
@@ -77,14 +84,19 @@ pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 /// Binds to `127.0.0.1:{Port}` for both UDP and TCP. Validates that the
 /// socket is bound to a loopback address before accepting connections.
 ///
-/// # Parameters
+/// ## Parameters
 ///
 /// * `Catalog` — The DNS catalog (zone configuration) to serve.
 /// * `Port` — The loopback port number to bind to.
 ///
-/// # Returns
+/// ## Returns
 ///
 /// `Ok(())` on graceful shutdown, or an error if binding or serving fails.
+///
+/// ## Errors
+///
+/// Returns an error if the socket binds to a non-loopback address or
+/// if the hickory-server runtime encounters a failure.
 pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 	let Address:SocketAddr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), Port);
 
@@ -176,14 +188,19 @@ pub async fn Serve(Catalog:Catalog, Port:u16) -> Result<()> {
 /// Creates a temporary Tokio runtime and runs [`Serve`] on it. Useful for
 /// threads or environments that do not manage their own async runtime.
 ///
-/// # Parameters
+/// ## Parameters
 ///
 /// * `Catalog` — The DNS catalog (zone configuration) to serve.
 /// * `Port` — The loopback port number to bind to.
 ///
-/// # Returns
+/// ## Returns
 ///
 /// `Ok(())` on graceful shutdown, or an error if binding or serving fails.
+///
+/// ## Errors
+///
+/// Propagates errors from [`Serve`], including binding failures and
+/// non-loopback address rejections.
 pub fn ServeSync(Catalog:Catalog, Port:u16) -> Result<()> {
 	let Runtime = tokio::runtime::Runtime::new()?;
 

@@ -19,9 +19,10 @@ use hickory_proto::rr::Name;
 /// Returns the default DNS forward allowlist.
 ///
 /// Domains in the allowlist may be forwarded to upstream DNS servers.
-/// All other domains receive `REFUSED`.
+/// All other domains receive `REFUSED`. Currently authorizes
+/// `update.editor.land` as the sole forwarded domain.
 ///
-/// # Returns
+/// ## Returns
 ///
 /// An iterator of parseable `Name` values for allowed forward domains.
 pub fn DefaultForwardAllowlist() -> impl Iterator<Item = Result<Name>> {

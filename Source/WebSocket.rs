@@ -77,7 +77,12 @@ use tokio_tungstenite::{
 	},
 };
 
-/// Per-spawn shared secret for WebSocket connection auth.
+/// Per-spawn shared secret for WebSocket connection authentication.
+///
+/// A cryptographically random 32-byte value used to authenticate
+/// WebSocket upgrade requests from native clients. Exchange happens
+/// out-of-band (environment variable from Mountain to Cocoon,
+/// Tauri invoke from Mountain to Sky).
 #[derive(Clone)]
 pub struct SharedSecret(pub [u8; 32]);
 
@@ -85,6 +90,10 @@ impl SharedSecret {
 	/// Generates a cryptographically random 32-byte shared secret.
 	///
 	/// Uses the thread-local RNG from `rand` 0.10 via `rand::random`.
+	///
+	/// ## Returns
+	///
+	/// A new `SharedSecret` with 32 random bytes.
 	pub fn random() -> Self {
 		// rand 0.10: `rand::random::<[u8; N]>()` fills via the
 		// thread-local RNG without needing the deprecated
@@ -97,6 +106,10 @@ impl SharedSecret {
 	/// Each byte is encoded as two hexadecimal characters, producing a
 	/// 64-character string. Useful for transmitting the secret over HTTP
 	/// headers or environment variables.
+	///
+	/// ## Returns
+	///
+	/// A 64-character hex string.
 	pub fn as_hex(&self) -> String { hex::encode(self.0) }
 
 	/// Parses a hex-encoded string back into a `SharedSecret`.

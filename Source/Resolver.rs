@@ -23,9 +23,16 @@ pub struct LandDnsResolver;
 
 impl LandDnsResolver {
 	/// Creates a new `LandDnsResolver` connected to the given DNS port.
+	///
+	/// This is the PascalCase variant, matching the project's naming
+	/// convention for constructors. See also [`new`](Self::new).
 	pub fn New(_Port:u16) -> Self { Self }
 
-	// Keep snake_case alias for reqwest compatibility (external crate pattern)
+	/// Creates a new `LandDnsResolver` (snake_case alias for reqwest).
+	///
+	/// This variant exists for compatibility with the `reqwest::dns::Resolve`
+	/// trait's expected construction pattern. Both this and [`New`](Self::New)
+	/// are identical.
 	pub fn new(_Port:u16) -> Self { Self }
 }
 

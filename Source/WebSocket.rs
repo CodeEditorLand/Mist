@@ -71,6 +71,10 @@ use tokio_tungstenite::{
 pub struct SharedSecret(pub [u8; 32]);
 
 impl SharedSecret {
+	/// Generates a cryptographically random 32-byte shared secret.
+	///
+	/// Uses the thread-local RNG from `rand` 0.10 via `rand::random`.
+	/// This is the recommended way to create a new secret for a session.
 	pub fn random() -> Self {
 		// rand 0.10: `rand::random::<[u8; N]>()` fills via the
 		// thread-local RNG without needing the deprecated
@@ -78,8 +82,18 @@ impl SharedSecret {
 		Self(rand::random::<[u8; 32]>())
 	}
 
+	/// Returns the secret as a hex-encoded string.
+	///
+	/// Each byte is encoded as two hexadecimal characters, producing a
+	/// 64-character string. This is useful for transmitting the secret
+	/// over HTTP headers or environment variables.
 	pub fn as_hex(&self) -> String { hex::encode(self.0) }
 
+	/// Parses a hex-encoded string back into a `SharedSecret`.
+	///
+	/// The input must be exactly 64 hexadecimal characters (32 bytes).
+	/// Returns an error if the length is wrong or the string contains
+	/// invalid hex characters.
 	pub fn from_hex(Hex:&str) -> Result<Self> {
 		let Bytes = hex::decode(Hex)?;
 
@@ -107,12 +121,25 @@ pub struct HandlerRegistry {
 }
 
 impl HandlerRegistry {
+	/// Creates a new, empty `HandlerRegistry` wrapped in an `Arc`.
+	///
+	/// The registry starts with no methods registered. Use
+	/// [`Register`](Self::Register) to add handlers.
 	pub fn new() -> Arc<Self> { Arc::new(Self::default()) }
 
+	/// Registers a handler function for the given method name.
+	///
+	/// When a JSON-RPC request arrives with `method` matching `Method`,
+	/// the `Handler` closure is invoked with the params `Value`.
+	/// Replaces any previously registered handler for the same name.
 	pub async fn Register(&self, Method:String, Handler:HandlerFn) {
 		self.Handlers.lock().await.insert(Method, Handler);
 	}
 
+	/// Looks up a handler function by method name.
+	///
+	/// Returns `None` if no handler has been registered for the given
+	/// method.
 	pub async fn Lookup(&self, Method:&str) -> Option<HandlerFn> { self.Handlers.lock().await.get(Method).cloned() }
 }
 
@@ -385,5 +412,12 @@ impl Client {
 			.map_err(|Error| Error.to_string())
 	}
 
+	/// Returns `true` if the WebSocket connection has been closed.
+	///
+	/// Once closed, further [`invoke`](Self::invoke) and
+	/// [`notify`](Self::notify) calls will return
+	/// `Err("connection closed")` immediately. A new `Client` must be
+	/// created via [`connect`](Self::connect) to re-establish the
+	/// channel.
 	pub fn is_closed(&self) -> bool { self.Closed.load(Ordering::Relaxed) }
 }

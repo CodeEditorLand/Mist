@@ -10,6 +10,7 @@
 	clippy::unnecessary_lazy_evaluations
 )]
 //! # Mist: Private DNS for Local-First Networking
+//!
 //! Mist gives Land its own private DNS so editor components can find each
 //! other on `*.editor.land` without touching the public internet. All
 //! queries resolve to `127.0.0.1`. No external DNS leaks, no configuration
@@ -22,6 +23,10 @@
 //! - **Dynamic Port Allocation**: Automatically finds available ports using
 //!   portpicker
 //! - **Async/Sync Support**: Both async and blocking server implementations
+//! - **WebSocket Transport**: Local-first JSON-RPC over WebSocket for direct
+//!   Sky↔Cocoon IPC
+//! - **Forward Security**: Allowlist-based DNS forwarding to prevent sidecars
+//!   from reaching arbitrary external hosts
 //!
 //! ## Example
 //!
@@ -41,6 +46,19 @@
 //! 	Ok(())
 //! }
 //! ```
+//!
+//! ## Modules
+//!
+//! - [`Server`]: DNS server builder and async/sync serving
+//! - [`Zone`]: Authoritative zone configuration for `editor.land`
+//! - [`Resolver`]: Stub and reqwest-compatible DNS resolvers
+//! - [`ForwardSecurity`]: Allowlist-based DNS forward security
+//! - [`WebSocket`]: JSON-RPC over WebSocket transport layer
+//!
+//! ## Links
+//!
+//! - [Repository](https://github.com/CodeEditorLand/Mist)
+//! - [Architecture](Documentation/GitHub/Architecture.md)
 
 use std::thread;
 

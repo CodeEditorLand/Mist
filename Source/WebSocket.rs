@@ -20,7 +20,7 @@
 //!
 //! Binary frames are reserved for B7-S6 phase 2 (length-prefixed
 //! prost-encoded payloads for diagnostic batches and tree
-//! children) - current implementation logs and ignores them.
+//! children) — current implementation logs and ignores them.
 //!
 //! # Auth
 //!
@@ -95,8 +95,8 @@ impl SharedSecret {
 	/// Returns the secret as a hex-encoded string.
 	///
 	/// Each byte is encoded as two hexadecimal characters, producing a
-	/// 64-character string. This is useful for transmitting the secret
-	/// over HTTP headers or environment variables.
+	/// 64-character string. Useful for transmitting the secret over HTTP
+	/// headers or environment variables.
 	pub fn as_hex(&self) -> String { hex::encode(self.0) }
 
 	/// Parses a hex-encoded string back into a `SharedSecret`.
@@ -130,9 +130,11 @@ pub type HandlerFn =
 pub type DefaultHandlerFn =
 	Arc<dyn Fn(String, Value) -> futures_util::future::BoxFuture<'static, Result<Value, String>> + Send + Sync>;
 
-/// Method dispatch table. Lookups are read-dominated (one per inbound
-/// frame) so the maps sit behind `RwLock`, not `Mutex` - concurrent
-/// connections never serialize on dispatch.
+/// Method dispatch table.
+///
+/// Lookups are read-dominated (one per inbound frame) so the maps sit
+/// behind `RwLock`, not `Mutex` — concurrent connections never serialize
+/// on dispatch.
 #[derive(Default)]
 pub struct HandlerRegistry {
 	Handlers:RwLock<HashMap<String, HandlerFn>>,
@@ -204,6 +206,7 @@ pub async fn ServeLocal(Port:u16, Secret:Option<SharedSecret>, Registry:Arc<Hand
 	CommonLibrary::Telemetry::CaptureEvent::Fn(
 		"land:mist:server:start",
 		Some(vec![("address", Address.as_str()), ("port", PortStr.as_str())]),
+
 	);
 
 	loop {
@@ -386,7 +389,7 @@ async fn HandleConnection(Stream:TcpStream, Secret:Option<SharedSecret>, Registr
 				};
 
 				if Identifier.is_null() {
-					// Notification - no response expected.
+					// Notification — no response expected.
 					continue;
 				}
 
@@ -449,22 +452,22 @@ impl Client {
 		Ok(Self::FromStream(Stream))
 	}
 
-					/// Connects with the per-spawn shared secret attached as the
-					/// `X-Land-Secret` upgrade header. Native clients (Grove, Cocoon)
-					/// use this against a secret-enforcing [`ServeLocal`] server;
-					/// browser clients use the query-parameter/subprotocol forms
-					/// instead since they cannot set upgrade headers.
-					///
-					/// # Parameters
-					///
-					/// * `Address` — The WebSocket server URL (ws:// or wss:// scheme).
-					/// * `Secret` — The shared secret for upgrade-time authentication.
-					///
-					/// # Returns
-					///
-					/// A new `Client` instance wrapped in `Arc`.
-					pub async fn ConnectWithSecret(Address:&str, Secret:&SharedSecret) -> Result<Arc<Self>> {
-						let mut RequestValue = Address.into_client_request()?;
+	/// Connects with the per-spawn shared secret attached as the
+	/// `X-Land-Secret` upgrade header. Native clients (Grove, Cocoon)
+	/// use this against a secret-enforcing [`ServeLocal`] server;
+	/// browser clients use the query-parameter/subprotocol forms
+	/// instead since they cannot set upgrade headers.
+	///
+	/// # Parameters
+	///
+	/// * `Address` — The WebSocket server URL (ws:// or wss:// scheme).
+	/// * `Secret` — The shared secret for upgrade-time authentication.
+	///
+	/// # Returns
+	///
+	/// A new `Client` instance wrapped in `Arc`.
+	pub async fn ConnectWithSecret(Address:&str, Secret:&SharedSecret) -> Result<Arc<Self>> {
+		let mut RequestValue = Address.into_client_request()?;
 
 		RequestValue.headers_mut().insert("X-Land-Secret", HeaderValue::from_str(&Secret.as_hex())?);
 
@@ -539,9 +542,20 @@ impl Client {
 		SelfReference
 	}
 
-	/// Invoke a remote method. Returns the result Value or an error
-	/// string. Pending requests are tracked by id; on disconnect the
-	/// future resolves with `Err("connection closed")`.
+	/// Invokes a remote method.
+	///
+	/// Returns the result Value or an error string. Pending requests
+	/// are tracked by identifier; on disconnect the future resolves
+	/// with `Err("connection closed")`.
+	///
+	/// # Parameters
+	///
+	/// * `Method` — The JSON-RPC method name.
+	/// * `Params` — The JSON parameter value.
+	///
+	/// # Returns
+	///
+	/// The result `Value` on success, or an error `String`.
 	pub async fn invoke(&self, Method:&str, Params:Value) -> Result<Value, String> {
 		if self.Closed.load(Ordering::Relaxed) {
 			return Err("connection closed".into());
@@ -568,7 +582,16 @@ impl Client {
 		Rx.await.map_err(|_| "request cancelled".to_string())?
 	}
 
-	/// Send a one-way notification (no response expected).
+	/// Sends a one-way notification (no response expected).
+	///
+	/// # Parameters
+	///
+	/// * `Method` — The JSON-RPC method name.
+	/// * `Params` — The JSON parameter value.
+	///
+	/// # Returns
+	///
+	/// `Ok(())` on success, or an error `String`.
 	pub async fn notify(&self, Method:&str, Params:Value) -> Result<(), String> {
 		if self.Closed.load(Ordering::Relaxed) {
 			return Err("connection closed".into());
@@ -589,7 +612,7 @@ impl Client {
 	/// Returns `true` if the WebSocket connection has been closed.
 	///
 	/// Once closed, further [`invoke`](Self::invoke) and
-	/// [`notify`](Self::notify) calls will return
+	/// [`notify`](Self::notify) calls return
 	/// `Err("connection closed")` immediately. A new `Client` must be
 	/// created via [`connect`](Self::connect) to re-establish the
 	/// channel.

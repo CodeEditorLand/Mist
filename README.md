@@ -77,11 +77,14 @@ query stays on the machine, and nothing escapes to the public internet.
 2. **Enforce Forward Security** - Implement a forward allowlist that only
    permits DNS resolution to specific, trusted external domains (e.g.,
    `update.editor.land`).
-3. **Support DNSSEC** - Sign the `editor.land` zone with ECDSA P-256 keys for
-   DNSSEC, providing cryptographic assurance of DNS responses.
-4. **Enable Sidecar Isolation** - Allow `Node.js` sidecars (like **Cocoon**) to
-   use the local DNS server via a custom DNS override, ensuring they cannot
-   access arbitrary external hosts.
+3. **Bridge Sky**&#x2001;🌌&#x2001;**and
+   Cocoon**&#x2001;🦋&#x2001;**Directly** - Run a local-first `JSON`-RPC
+   `WebSocket` transport (`Source/WebSocket.rs`) with shared-secret
+   authentication, removing the Tauri-invoke + `gRPC` double hop for
+   high-frequency extension-API traffic.
+4. **Enable Sidecar Isolation** - Allow `Node.js` sidecars (like
+   **Cocoon**&#x2001;🦋) to use the local DNS server via a custom DNS override,
+   ensuring they cannot access arbitrary external hosts.
 
 ---
 
@@ -96,17 +99,19 @@ reaching arbitrary external hosts. Only explicitly trusted domains (such as
 `update.editor.land`) can be resolved externally. All other queries are refused
 by default.
 
-**DNSSEC Signing** - The `editor.land` zone is signed with ECDSA P-256 keys,
-providing cryptographic assurance of DNS responses. Clients can verify the
-authenticity of every DNS record through `DNSKEY` and `RRSIG` records.
-
 **Dynamic Port Allocation** - Automatically finds available ports using
 `portpicker`, avoiding port conflicts with other services. Prefers a
 configurable starting port and falls back to system-assigned ports when needed.
 
-**WebSocket Transport** - Real-time DNS data streaming over WebSocket for
-local-first `JSON`-RPC communication between editor components. Supports secure,
-low-latency message delivery within the private network.
+**WebSocket Transport** - `Source/WebSocket.rs` implements a local-first
+`JSON`-RPC channel for the direct Sky↔Cocoon path, replacing the Tauri-invoke +
+`Mountain`&#x2001;⛰️&#x2001;`gRPC` double hop for the ~95% of `IPC` traffic that
+is extension-API calls. Every spawn gets a random 32-byte shared secret,
+presented by clients via the `X-Land-Secret` header, a `?secret=` query
+parameter, or a `Sec-WebSocket-Protocol` entry (browsers cannot set custom
+upgrade headers); connections presenting none of the three are rejected with
+`403 Forbidden`. Reconnect uses exponential backoff (100ms → 5s cap, 30s
+give-up).
 
 **Loopback Binding** - The DNS server binds exclusively to `127.0.0.1`, ensuring
 no external host can query the private DNS server. Combined with the forward
@@ -116,12 +121,12 @@ allowlist, this creates a complete network boundary.
 
 ## Core Architecture Principles&#x2001;🏗️
 
-| Principle               | Description                                                                                                                                                     | Key Components                          |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| **Network Isolation**   | All `editor.land` DNS resolution stays local. The server binds to `127.0.0.1` only, and external queries require explicit allowlisting.                         | `Server`, `ForwardSecurity`             |
-| **Cryptographic Trust** | DNSSEC signing with ECDSA P-256 keys ensures DNS responses cannot be spoofed. Every zone record carries a verifiable signature.                                 | `Zone`, `ring` DNSSEC operations        |
-| **Minimal Surface**     | A flat module structure with no unnecessary abstractions. Each module has a single, well-defined responsibility with clear public APIs.                         | `Library`, `Server`, `Zone`, `Resolver` |
-| **Composability**       | Independent DNS resolver for use by other Land components. Any consumer can create a resolver pointed at the local DNS server without additional configuration. | `Resolver`, `LandDnsResolver`           |
+| Principle                   | Description                                                                                                                                                     | Key Components                          |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **Network Isolation**       | All `editor.land` DNS resolution stays local. The server binds to `127.0.0.1` only, and external queries require explicit allowlisting.                         | `Server`, `ForwardSecurity`             |
+| **Authenticated Transport** | The `WebSocket` `JSON`-RPC channel requires a per-spawn shared secret on every upgrade request; connections without it are refused before any message is read.  | `WebSocket`, `SharedSecret`             |
+| **Minimal Surface**         | A flat module structure with no unnecessary abstractions. Each module has a single, well-defined responsibility with clear public APIs.                         | `Library`, `Server`, `Zone`, `Resolver` |
+| **Composability**           | Independent DNS resolver for use by other Land components. Any consumer can create a resolver pointed at the local DNS server without additional configuration. | `Resolver`, `LandDnsResolver`           |
 
 ---
 
@@ -135,57 +140,61 @@ graph LR
     classDef consumer fill:#f0d0ff,stroke:#9b59b6,stroke-width:1px,color:#2c0050;
     classDef external fill:#ebebeb,stroke:#888,stroke-width:1px,stroke-dasharray:5 5,color:#333;
 
-    subgraph CONSUMERS["Land Components - DNS Clients"]
-        Mountain["Mountain ⛰️\nstarts Mist, reads DnsPort"]:::consumer
-        Cocoon["Cocoon 🦋\nNode.js sidecar (DNS override)"]:::consumer
-        Air["Air 🪁\nHTTP client with custom DNS"]:::consumer
+    subgraph CONSUMERS["Land Components - DNS + WebSocket Clients"]
+        Mountain["Mountain ⛰️\nstarts Mist, reads DnsPort"]:::consumer
+        Cocoon["Cocoon 🦋\nNode.js sidecar (DNS override + WebSocket peer)"]:::consumer
+        Air["Air 🪁\nHTTP client with custom DNS"]:::consumer
+        Sky["Sky 🌤️\nbrowser workbench (WebSocket peer)"]:::consumer
     end
 
-    subgraph MIST["Mist 🌫️ - Local DNS Server (127.0.0.1:PORT)"]
+    subgraph MIST["Mist 🌫️ - Local DNS + WebSocket Server (127.0.0.1:PORT)"]
         direction TB
         Server["Server.rs - Hickory DNS\nUDP + TCP listeners"]:::mist
-        Zone["Zone.rs - Authoritative Zone\n*.editor.land → 127.0.0.1\nDNSSEC signed ECDSA P-256"]:::zone
+        Zone["Zone.rs - Authoritative Zone\n*.editor.land → 127.0.0.1\nSOA/NS/A records"]:::zone
         Forward["ForwardSecurity.rs - Allowlist\nupdate.editor.land only"]:::forward
         Resolver["Resolver.rs - LandDnsResolver"]:::mist
-        WSTransport["WebSocket.rs - DNS data stream"]:::mist
+        WSTransport["WebSocket.rs - Sky↔Cocoon JSON-RPC\nshared-secret auth"]:::mist
 
         Server --> Zone
         Server --> Forward
         Server --> Resolver
-        Resolver --- WSTransport
     end
 
-    subgraph INTERNET["External ☁️"]
+    subgraph INTERNET["External ☁️"]
         UpdateServer["update.editor.land\nallowlisted only"]:::external
     end
 
     Mountain -- spawns + DnsPort --> Server
     Cocoon -- DNS queries --> Server
     Air -- DNS queries --> Resolver
+    Cocoon <--> WSTransport
+    Sky <--> WSTransport
     Forward -- forwards allowed --> UpdateServer
 ```
 
 **Connection paths:**
 
-| Path            | Protocol                           | Use Case                                                   |
-| --------------- | ---------------------------------- | ---------------------------------------------------------- |
-| Mountain → Mist | Process spawn + port handoff       | Application initialization, reads `DnsPort` managed state  |
-| Cocoon → Mist   | DNS over UDP/TCP to `127.0.0.1`    | `Node.js` sidecar DNS resolution for `editor.land` domains |
-| Air → Mist      | `LandDnsResolver` (Hickory client) | HTTP client DNS configured to use local resolver           |
-| Mist → External | UDP DNS (allowlisted only)         | Forwarding queries for `update.editor.land`                |
+| Path                                | Protocol                           | Use Case                                                    |
+| ----------------------------------- | ---------------------------------- | ----------------------------------------------------------- |
+| Mountain&#x2001;⛰️ → Mist&#x2001;🌫️ | Process spawn + port handoff       | Application initialization, reads `DnsPort` managed state   |
+| Cocoon&#x2001;🦋 → Mist&#x2001;🌫️   | DNS over UDP/TCP to `127.0.0.1`    | `Node.js` sidecar DNS resolution for `editor.land` domains  |
+| Air&#x2001;🪁 → Mist&#x2001;🌫️      | `LandDnsResolver` (Hickory client) | HTTP client DNS configured to use local resolver            |
+| Cocoon&#x2001;🦋 ↔ Mist&#x2001;🌫️   | `JSON`-RPC over `WebSocket`        | Direct Sky↔Cocoon extension-API traffic, shared-secret auth |
+| Sky&#x2001;🌌 ↔ Mist&#x2001;🌫️      | `JSON`-RPC over `WebSocket`        | Browser workbench side of the same direct transport         |
+| Mist&#x2001;🌫️ → External           | UDP DNS (allowlisted only)         | Forwarding queries for `update.editor.land`                 |
 
 ---
 
 ## Key Components
 
-| Component           | Path                        | Description                                                                                    |
-| ------------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
-| Library Entry       | `Source/Library.rs`         | Main library entry point, exports public API and manages DNS server state.                     |
-| DNS Server          | `Source/Server.rs`          | DNS server implementation using Hickory, handles UDP/TCP listeners and catalog management.     |
-| Zone Configuration  | `Source/Zone.rs`            | DNS zone configuration for `editor.land`, including record definitions and authority creation. |
-| DNS Resolver        | `Source/Resolver.rs`        | DNS resolver for use by other components, provides interface to the local DNS server.          |
-| Forward Security    | `Source/ForwardSecurity.rs` | Forward allowlist management, restricts which external domains can be resolved.                |
-| WebSocket Transport | `Source/WebSocket.rs`       | WebSocket transport layer for real-time DNS data streaming.                                    |
+| Component           | Path                        | Description                                                                                                   |
+| ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Library Entry       | `Source/Library.rs`         | Main library entry point, exports public API and manages DNS server state.                                    |
+| DNS Server          | `Source/Server.rs`          | DNS server implementation using Hickory, handles UDP/TCP listeners and catalog management.                    |
+| Zone Configuration  | `Source/Zone.rs`            | DNS zone configuration for `editor.land`, including record (SOA/NS/A) definitions and authority creation.     |
+| DNS Resolver        | `Source/Resolver.rs`        | `LandDnsResolver` for `reqwest` DNS override, routing `*.editor.land` to loopback; `TokioResolver` is a stub. |
+| Forward Security    | `Source/ForwardSecurity.rs` | Forward allowlist management, restricts which external domains can be resolved.                               |
+| WebSocket Transport | `Source/WebSocket.rs`       | `JSON`-RPC `WebSocket` server/client for the direct Sky↔Cocoon path, with shared-secret auth and reconnect.   |
 
 ---
 
@@ -196,10 +205,10 @@ Mist/
 ├── Source/
 │   ├── Library.rs              # Library root, DNS server lifecycle
 │   ├── Server.rs               # Hickory DNS server (UDP/TCP listeners)
-│   ├── Zone.rs                 # Authoritative editor.land zone + DNSSEC
+│   ├── Zone.rs                 # Authoritative editor.land zone (SOA/NS/A)
 │   ├── Resolver.rs             # LandDnsResolver for consumer use
 │   ├── ForwardSecurity.rs      # Allowlist-based forward DNS
-│   └── WebSocket.rs            # JSON-RPC over WebSocket transport
+│   └── WebSocket.rs            # JSON-RPC over WebSocket transport (Sky↔Cocoon)
 ├── tests/
 │   └── integration.rs          # Integration test suite
 ├── Documentation/
@@ -219,18 +228,18 @@ Mist/
 `*.editor.land` domains resolve to `127.0.0.1`, preventing external network
 leakage. External DNS queries are restricted to a strict allowlist.
 
-**Mist** is part of the networking/IPC connectivity stack alongside **Air** 🪁
-(background daemon, uses Mist's DNS resolver for its HTTP client) and **Vine**
-🌿 (`gRPC` protocol layer).
+**Mist** is part of the networking/IPC connectivity stack alongside
+**Air**&#x2001;🪁 (background daemon, uses Mist's DNS resolver for its HTTP
+client) and **Vine**&#x2001;🌿&#x2001;(`gRPC` protocol layer).
 
 ### Integration
 
-| Consumer        | How Mist is Used                                                                                                                   |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Mountain** ⛰️ | Starts the DNS server during application initialization and provides the port to other components via the `DnsPort` managed state. |
-| **Air** 🪁      | Uses the DNS server for secure HTTP requests, configuring HTTP clients to use the local DNS resolver.                              |
-| **SideCar** 🏍️  | Spawns `Node.js` sidecars with DNS override configuration, ensuring all DNS queries go through the local server.                   |
-| **Cocoon** 🦋   | The `Node.js` extension host can resolve `editor.land` domains via the local DNS server for `gRPC` communication with Mountain.    |
+| Consumer               | How Mist is Used                                                                                                                   |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Mountain**&#x2001;⛰️ | Starts the DNS server during application initialization and provides the port to other components via the `DnsPort` managed state. |
+| **Air**&#x2001;🪁      | Uses the DNS server for secure HTTP requests, configuring HTTP clients to use the local DNS resolver.                              |
+| **SideCar**&#x2001;🚃  | Spawns `Node.js` sidecars with DNS override configuration, ensuring all DNS queries go through the local server.                   |
+| **Cocoon**&#x2001;🦋   | The `Node.js` extension host can resolve `editor.land` domains via the local DNS server for `gRPC` communication with Mountain.    |
 
 ### DNS Zone Configuration
 
@@ -247,11 +256,14 @@ to `127.0.0.1`:
 
 All other external queries are refused by default.
 
-**DNSSEC** - The `editor.land` zone is signed with ECDSA P-256 keys:
+**WebSocket Path** - `Source/WebSocket.rs` runs a `JSON`-RPC channel alongside
+the DNS server for the direct Sky↔Cocoon path:
 
-- `DNSKEY` records provide the public signing key
-- `RRSIG` records provide cryptographic signatures
-- Clients can verify the authenticity of DNS responses
+- Every spawn generates a random 32-byte `SharedSecret`
+- Clients authenticate via `X-Land-Secret` header, `?secret=` query parameter,
+  or `Sec-WebSocket-Protocol` entry
+- Connections presenting none of the three are rejected with `403 Forbidden`
+- Reconnect uses exponential backoff (100ms → 5s cap, gives up after 30s)
 
 ---
 
@@ -311,19 +323,24 @@ let Resolver = LandDnsResolver::new(Port);
 
 ### Key Dependencies
 
-| Crate            | Purpose                          |
-| ---------------- | -------------------------------- |
-| `hickory-server` | DNS server implementation        |
-| `hickory-proto`  | DNS protocol implementation      |
-| `hickory-client` | DNS client for resolvers         |
-| `ring`           | Cryptographic signing for DNSSEC |
-| `tokio`          | Async runtime                    |
-| `anyhow`         | Error handling                   |
-| `tracing`        | Logging and instrumentation      |
-| `once_cell`      | Thread-safe lazy initialization  |
-| `portpicker`     | Random port selection            |
-| `async-trait`    | Async trait support              |
-| `reqwest`        | HTTP client with DNS integration |
+| Crate               | Purpose                                                        |
+| ------------------- | -------------------------------------------------------------- |
+| `hickory-server`    | DNS server implementation (`dnssec-ring` feature enabled)      |
+| `hickory-proto`     | DNS protocol implementation (`dnssec-ring` feature enabled)    |
+| `hickory-client`    | DNS client for resolvers                                       |
+| `ring`              | Cryptographic primitives (available for future DNSSEC signing) |
+| `tokio`             | Async runtime                                                  |
+| `tokio-tungstenite` | `WebSocket` protocol for the Sky↔Cocoon transport              |
+| `futures-util`      | Stream/sink combinators for the `WebSocket` server             |
+| `hex`               | Hex encoding for the `WebSocket` shared secret                 |
+| `anyhow`            | Error handling                                                 |
+| `tracing`           | Logging and instrumentation                                    |
+| `once_cell`         | Thread-safe lazy initialization                                |
+| `portpicker`        | Random port selection                                          |
+| `async-trait`       | Async trait support                                            |
+| `reqwest`           | HTTP client with DNS integration                               |
+| `rand`              | Shared-secret generation                                       |
+| `Common`            | Shared workspace types (workspace-internal crate)              |
 
 ---
 
@@ -331,12 +348,12 @@ let Resolver = LandDnsResolver::new(Port);
 
 Mist enforces security at multiple layers:
 
-| Layer                 | Mechanism                                                                                                                |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Network isolation** | All `editor.land` domains resolve to `127.0.0.1`, preventing any external network access for private services.           |
-| **Forward allowlist** | External DNS queries are restricted to a trusted allowlist, preventing sidecars from accessing arbitrary external hosts. |
-| **DNSSEC**            | Zone signing provides cryptographic assurance of DNS responses, preventing DNS spoofing attacks.                         |
-| **Loopback binding**  | The DNS server only binds to `127.0.0.1`, preventing external access to the private DNS server.                          |
+| Layer                 | Mechanism                                                                                                                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Network isolation** | All `editor.land` domains resolve to `127.0.0.1`, preventing any external network access for private services.                                                         |
+| **Forward allowlist** | External DNS queries are restricted to a trusted allowlist, preventing sidecars from accessing arbitrary external hosts.                                               |
+| **Loopback binding**  | Both the DNS server and the `WebSocket` server only bind to `127.0.0.1`/loopback, preventing external access.                                                          |
+| **WebSocket auth**    | Every spawn's `SharedSecret` (32 random bytes) is required on the upgrade request; unauthenticated connections receive `403 Forbidden` before any RPC message is read. |
 
 ---
 
@@ -344,12 +361,13 @@ Mist enforces security at multiple layers:
 
 Mist is designed to be compatible with:
 
-| Target          | Integration                                                                         |
-| --------------- | ----------------------------------------------------------------------------------- |
-| **Mountain** ⛰️ | Starts the DNS server at initialization and distributes `DnsPort` via managed state |
-| **Air** 🪁      | Uses `LandDnsResolver` as `reqwest` DNS override for secure HTTP requests           |
-| **Cocoon** 🦋   | Resolves `editor.land` domains through the local DNS server for `gRPC` IPC          |
-| **SideCar** 🏍️  | Spawns `Node.js` sidecars with DNS override pointing at the local server            |
+| Target                 | Integration                                                                                                    |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Mountain**&#x2001;⛰️ | Starts the DNS server at initialization and distributes `DnsPort` via managed state                            |
+| **Air**&#x2001;🪁      | Uses `LandDnsResolver` as `reqwest` DNS override for secure HTTP requests                                      |
+| **Cocoon**&#x2001;🦋   | Resolves `editor.land` domains through the local DNS server for `gRPC` IPC; also a `WebSocket` `JSON`-RPC peer |
+| **Sky**&#x2001;🌤️      | Browser workbench peer on the direct `WebSocket` `JSON`-RPC path                                               |
+| **SideCar**&#x2001;🚃  | Spawns `Node.js` sidecars with DNS override pointing at the local server                                       |
 
 ---
 
@@ -367,14 +385,32 @@ Mist is designed to be compatible with:
     - In-depth technical details
 - [Land Documentation](../../Documentation/GitHub/README.md) - Complete
   documentation index
-- **Air** 🪁 - Background daemon that consumes Mist for HTTP client DNS -
+- **Air**&#x2001;🪁 - Background daemon that consumes Mist for HTTP client DNS -
   [GitHub](https://github.com/CodeEditorLand/Air)
-- **Vine** 🌿 - `gRPC` protocol layer -
+- **Vine**&#x2001;🌿 - `gRPC` protocol layer -
   [GitHub](https://github.com/CodeEditorLand/Vine)
-- **Mountain** ⛰️ - Main application process -
+- **Mountain**&#x2001;⛰️ - Main application process -
   [GitHub](https://github.com/CodeEditorLand/Mountain)
 - [CHANGELOG](https://github.com/CodeEditorLand/Mist/tree/Current/CHANGELOG.md)
     - Version history
+
+---
+
+## License&#x2001;⚖️
+
+This project is released into the public domain under the **Creative Commons CC0
+Universal** license. You are free to use, modify, distribute, and build upon
+this work for any purpose, without any restrictions. For the full legal text,
+see the [`LICENSE`](https://github.com/CodeEditorLand/Mist/tree/Current/LICENSE)
+file.
+
+---
+
+## Changelog&#x2001;📜
+
+See
+[`CHANGELOG.md`](https://github.com/CodeEditorLand/Mist/tree/Current/CHANGELOG.md)
+for a history of changes specific to **Mist**&#x2001;🌫️.
 
 ---
 
@@ -391,26 +427,18 @@ the open-source steward for Code Editor Land under the NGI0 Commons Fund grant.
 <table>
 	<tbody>
 		<tr>
-			<td align="left" valign="middle">
-				<a href="https://Editor.Land">
-					<img width="60" src="https://raw.githubusercontent.com/CodeEditorLand/Asset/refs/heads/Current/Logo/Land.svg" alt="Land" />
-				</a>
-			</td>
-			<td align="left" valign="middle">
-				<a href="https://PlayForm.Cloud">
-					<img width="76" src="https://raw.githubusercontent.com/PlayForm/Asset/refs/heads/Current/Logo/PlayForm.svg" alt="PlayForm" />
-				</a>
-			</td>
-			<td align="left" valign="middle">
-				<a href="https://NLnet.NL">
-					<img width="240" src="https://NLnet.NL/logo/banner.svg" alt="NLnet" />
-				</a>
-			</td>
-			<td align="left" valign="middle">
-				<a href="https://NLnet.NL/commonsfund">
-					<img width="240" src="https://NLnet.NL/image/logos/NGI0CommonsFund_tag_black_mono.svg" alt="NGI0 Commons Fund" />
-				</a>
-			</td>
+			<td align="left" valign="middle"><a href="https://Editor.Land"><img width="60" src="https://raw.githubusercontent.com/CodeEditorLand/Asset/refs/heads/Current/Logo/Land.svg" alt="Land" /></a></td>
+			<td align="left" valign="middle"><a href="https://PlayForm.Cloud"><img width="76" src="https://raw.githubusercontent.com/PlayForm/Asset/refs/heads/Current/Logo/PlayForm.svg" alt="PlayForm" /></a></td>
+			<td align="left" valign="middle"><a href="https://NLnet.NL"><img width="240" src="https://NLnet.NL/logo/banner.svg" alt="NLnet" /></a></td>
+			<td align="left" valign="middle"><a href="https://NLnet.NL/commonsfund"><img width="240" src="https://NLnet.NL/image/logos/NGI0CommonsFund_tag_black_mono.svg" alt="NGI0 Commons Fund" /></a></td>
 		</tr>
 	</tbody>
 </table>
+
+---
+
+**Project Maintainers**: Source Open
+([Source/Open@editor.land](mailto:Source/Open@editor.land)) |
+[GitHub Repository](https://github.com/CodeEditorLand/Mist) |
+[Report an Issue](https://github.com/CodeEditorLand/Mist/issues) |
+[Security Policy](https://github.com/CodeEditorLand/Mist/security/policy)

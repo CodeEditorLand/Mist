@@ -49,8 +49,8 @@ _"Nothing leaks to the public internet. A clean network boundary between the
 editor and the outside world."_
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](https://github.com/CodeEditorLand/Mist/tree/Current/LICENSE)
-[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Crates.io](https://img.shields.io/crates/v/Mist.svg)](https://crates.io/crates/Mist)
-[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/)&#x2001;[![Rust Version](https://img.shields.io/badge/Rust-1.75+-orange.svg)](https://www.rust-lang.org/)
+[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/) [![Crates.io](https://img.shields.io/crates/v/Mist.svg)](https://crates.io/crates/Mist)
+[<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/) [![Rust Version](https://img.shields.io/badge/Rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 
 **[Rust API Documentation](https://rust.documentation.mist.editor.land/)**&#x2001;📖
 
@@ -105,7 +105,7 @@ configurable starting port and falls back to system-assigned ports when needed.
 
 **WebSocket Transport** - `Source/WebSocket.rs` implements a local-first
 `JSON`-RPC channel for the direct Sky↔Cocoon path, replacing the Tauri-invoke +
-`Mountain`&#x2001;⛰️&#x2001;`gRPC` double hop for the ~95% of `IPC` traffic that
+`Mountain`&#x2001;⛰️ `gRPC` double hop for the ~95% of `IPC` traffic that
 is extension-API calls. Every spawn gets a random 32-byte shared secret,
 presented by clients via the `X-Land-Secret` header, a `?secret=` query
 parameter, or a `Sec-WebSocket-Protocol` entry (browsers cannot set custom
@@ -130,7 +130,7 @@ allowlist, this creates a complete network boundary.
 
 ---
 
-## System Architecture&#x2001;
+## System Architecture
 
 ```mermaid
 graph LR
@@ -230,7 +230,7 @@ leakage. External DNS queries are restricted to a strict allowlist.
 
 **Mist** is part of the networking/IPC connectivity stack alongside
 **Air**&#x2001;🪁 (background daemon, uses Mist's DNS resolver for its HTTP
-client) and **Vine**&#x2001;🌿&#x2001;(`gRPC` protocol layer).
+client) and **Vine**&#x2001;🌿 (`gRPC` protocol layer).
 
 ### Integration
 

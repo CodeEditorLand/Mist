@@ -144,7 +144,7 @@ graph LR
         Mountain["Mountain ⛰️\nstarts Mist, reads DnsPort"]:::consumer
         Cocoon["Cocoon 🦋\nNode.js sidecar (DNS override + WebSocket peer)"]:::consumer
         Air["Air 🪁\nHTTP client with custom DNS"]:::consumer
-        Sky["Sky 🌤️\nbrowser workbench (WebSocket peer)"]:::consumer
+        Sky["Sky 🌌\nbrowser workbench (WebSocket peer)"]:::consumer
     end
 
     subgraph MIST["Mist 🌫️ - Local DNS + WebSocket Server (127.0.0.1:PORT)"]
@@ -366,7 +366,7 @@ Mist is designed to be compatible with:
 | **Mountain**&#x2001;⛰️ | Starts the DNS server at initialization and distributes `DnsPort` via managed state                            |
 | **Air**&#x2001;🪁      | Uses `LandDnsResolver` as `reqwest` DNS override for secure HTTP requests                                      |
 | **Cocoon**&#x2001;🦋   | Resolves `editor.land` domains through the local DNS server for `gRPC` IPC; also a `WebSocket` `JSON`-RPC peer |
-| **Sky**&#x2001;🌤️      | Browser workbench peer on the direct `WebSocket` `JSON`-RPC path                                               |
+| **Sky**&#x2001;🌌      | Browser workbench peer on the direct `WebSocket` `JSON`-RPC path                                               |
 | **SideCar**&#x2001;🚃  | Spawns `Node.js` sidecars with DNS override pointing at the local server                                       |
 
 ---

@@ -58,11 +58,11 @@ pub fn BuildCatalog(_DNSPort:u16) -> Result<Catalog> {
 	let EditorLandOrigin = hickory_proto::rr::Name::from_ascii("editor.land.").unwrap();
 
 	// `AxfrPolicy::Deny` replaces the old `false` bool that disabled AXFR.
-	// The trailing `None` is `Option<NxProofKind>` and remains dnssec-ring-gated.
-	// Turbofish pins the runtime provider so inference has a concrete type
-	// (the handler is generic over `P: RuntimeProvider`; there's no
-	// inference anchor without either an `.await`-driven callsite or an
-	// explicit parameter here).
+	// The trailing `None` is `Option<NxProofKind>` and remains
+	// dnssec-ring-gated. Turbofish pins the runtime provider so inference
+	// has a concrete type (the handler is generic over `P:
+	// RuntimeProvider`; there's no inference anchor without either an
+	// `.await`-driven callsite or an explicit parameter here).
 	let Authority = InMemoryZoneHandler::<TokioRuntimeProvider>::empty(
 		EditorLandOrigin.clone(),
 		ZoneType::Primary,

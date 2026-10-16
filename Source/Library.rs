@@ -153,7 +153,8 @@ pub fn start(preferred_port:u16) -> Result<u16> {
 	// Try the preferred port first, then pick a random available one
 	let port = portpicker::pick_unused_port()
 		.or_else(|| {
-			// If pick_unused_port returns None, try the preferred port explicitly
+			// If pick_unused_port returns None, try the preferred port
+			// explicitly
 			Some(preferred_port)
 		})
 		.ok_or_else(|| anyhow::anyhow!("Failed to find an available port"))?;

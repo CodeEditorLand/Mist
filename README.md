@@ -1,4 +1,4 @@
-# **Mist**&#x2001;🌫️
+# **Mist** 🌫️
 
 <table>
 	<tr>
@@ -52,7 +52,7 @@ editor and the outside world."_
 [<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/) [![Crates.io](https://img.shields.io/crates/v/Mist.svg)](https://crates.io/crates/Mist)
 [<img src="https://editor.land/Image/Rust.svg" width="14" alt="Rust" />](https://www.rust-lang.org/) [![Rust Version](https://img.shields.io/badge/Rust-1.75+-orange.svg)](https://www.rust-lang.org/)
 
-**[Rust API Documentation](https://rust.documentation.mist.editor.land/)**&#x2001;📖
+**[Rust API Documentation](https://rust.documentation.mist.editor.land/)** 📖
 
 ---
 
@@ -77,18 +77,18 @@ query stays on the machine, and nothing escapes to the public internet.
 2. **Enforce Forward Security** - Implement a forward allowlist that only
    permits DNS resolution to specific, trusted external domains (e.g.,
    `update.editor.land`).
-3. **Bridge Sky**&#x2001;🌌&#x2001;**and
-   Cocoon**&#x2001;🦋&#x2001;**Directly** - Run a local-first `JSON`-RPC
+3. **Bridge Sky** 🌌 **and
+   Cocoon** 🦋 **Directly** - Run a local-first `JSON`-RPC
    `WebSocket` transport (`Source/WebSocket.rs`) with shared-secret
    authentication, removing the Tauri-invoke + `gRPC` double hop for
    high-frequency extension-API traffic.
 4. **Enable Sidecar Isolation** - Allow `Node.js` sidecars (like
-   **Cocoon**&#x2001;🦋) to use the local DNS server via a custom DNS override,
+   **Cocoon** 🦋) to use the local DNS server via a custom DNS override,
    ensuring they cannot access arbitrary external hosts.
 
 ---
 
-## Key Features&#x2001;🔒
+## Key Features 🔒
 
 **Private DNS Zone** - Authoritative zone for `*.editor.land` domains. All
 subdomains resolve to `127.0.0.1`, creating a fully isolated private network for
@@ -105,7 +105,7 @@ configurable starting port and falls back to system-assigned ports when needed.
 
 **WebSocket Transport** - `Source/WebSocket.rs` implements a local-first
 `JSON`-RPC channel for the direct Sky↔Cocoon path, replacing the Tauri-invoke +
-`Mountain`&#x2001;⛰️ `gRPC` double hop for the ~95% of `IPC` traffic that
+`Mountain` ⛰️ `gRPC` double hop for the ~95% of `IPC` traffic that
 is extension-API calls. Every spawn gets a random 32-byte shared secret,
 presented by clients via the `X-Land-Secret` header, a `?secret=` query
 parameter, or a `Sec-WebSocket-Protocol` entry (browsers cannot set custom
@@ -119,7 +119,7 @@ allowlist, this creates a complete network boundary.
 
 ---
 
-## Core Architecture Principles&#x2001;🏗️
+## Core Architecture Principles 🏗️
 
 | Principle                   | Description                                                                                                                                                     | Key Components                          |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
@@ -176,12 +176,12 @@ graph LR
 
 | Path                                | Protocol                           | Use Case                                                    |
 | ----------------------------------- | ---------------------------------- | ----------------------------------------------------------- |
-| Mountain&#x2001;⛰️ → Mist&#x2001;🌫️ | Process spawn + port handoff       | Application initialization, reads `DnsPort` managed state   |
-| Cocoon&#x2001;🦋 → Mist&#x2001;🌫️   | DNS over UDP/TCP to `127.0.0.1`    | `Node.js` sidecar DNS resolution for `editor.land` domains  |
-| Air&#x2001;🪁 → Mist&#x2001;🌫️      | `LandDnsResolver` (Hickory client) | HTTP client DNS configured to use local resolver            |
-| Cocoon&#x2001;🦋 ↔ Mist&#x2001;🌫️   | `JSON`-RPC over `WebSocket`        | Direct Sky↔Cocoon extension-API traffic, shared-secret auth |
-| Sky&#x2001;🌌 ↔ Mist&#x2001;🌫️      | `JSON`-RPC over `WebSocket`        | Browser workbench side of the same direct transport         |
-| Mist&#x2001;🌫️ → External           | UDP DNS (allowlisted only)         | Forwarding queries for `update.editor.land`                 |
+| Mountain ⛰️ → Mist 🌫️ | Process spawn + port handoff       | Application initialization, reads `DnsPort` managed state   |
+| Cocoon 🦋 → Mist 🌫️   | DNS over UDP/TCP to `127.0.0.1`    | `Node.js` sidecar DNS resolution for `editor.land` domains  |
+| Air 🪁 → Mist 🌫️      | `LandDnsResolver` (Hickory client) | HTTP client DNS configured to use local resolver            |
+| Cocoon 🦋 ↔ Mist 🌫️   | `JSON`-RPC over `WebSocket`        | Direct Sky↔Cocoon extension-API traffic, shared-secret auth |
+| Sky 🌌 ↔ Mist 🌫️      | `JSON`-RPC over `WebSocket`        | Browser workbench side of the same direct transport         |
+| Mist 🌫️ → External           | UDP DNS (allowlisted only)         | Forwarding queries for `update.editor.land`                 |
 
 ---
 
@@ -198,7 +198,7 @@ graph LR
 
 ---
 
-## Project Structure&#x2001;🗺️
+## Project Structure 🗺️
 
 ```
 Mist/
@@ -229,17 +229,17 @@ Mist/
 leakage. External DNS queries are restricted to a strict allowlist.
 
 **Mist** is part of the networking/IPC connectivity stack alongside
-**Air**&#x2001;🪁 (background daemon, uses Mist's DNS resolver for its HTTP
-client) and **Vine**&#x2001;🌿 (`gRPC` protocol layer).
+**Air** 🪁 (background daemon, uses Mist's DNS resolver for its HTTP
+client) and **Vine** 🌿 (`gRPC` protocol layer).
 
 ### Integration
 
 | Consumer               | How Mist is Used                                                                                                                   |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| **Mountain**&#x2001;⛰️ | Starts the DNS server during application initialization and provides the port to other components via the `DnsPort` managed state. |
-| **Air**&#x2001;🪁      | Uses the DNS server for secure HTTP requests, configuring HTTP clients to use the local DNS resolver.                              |
-| **SideCar**&#x2001;🚃  | Spawns `Node.js` sidecars with DNS override configuration, ensuring all DNS queries go through the local server.                   |
-| **Cocoon**&#x2001;🦋   | The `Node.js` extension host can resolve `editor.land` domains via the local DNS server for `gRPC` communication with Mountain.    |
+| **Mountain** ⛰️ | Starts the DNS server during application initialization and provides the port to other components via the `DnsPort` managed state. |
+| **Air** 🪁      | Uses the DNS server for secure HTTP requests, configuring HTTP clients to use the local DNS resolver.                              |
+| **SideCar** 🚃  | Spawns `Node.js` sidecars with DNS override configuration, ensuring all DNS queries go through the local server.                   |
+| **Cocoon** 🦋   | The `Node.js` extension host can resolve `editor.land` domains via the local DNS server for `gRPC` communication with Mountain.    |
 
 ### DNS Zone Configuration
 
@@ -267,7 +267,7 @@ the DNS server for the direct Sky↔Cocoon path:
 
 ---
 
-## Getting Started&#x2001;🚀
+## Getting Started 🚀
 
 ### Prerequisites
 
@@ -344,7 +344,7 @@ let Resolver = LandDnsResolver::new(Port);
 
 ---
 
-## Security&#x2001;🔒
+## Security 🔒
 
 Mist enforces security at multiple layers:
 
@@ -363,17 +363,17 @@ Mist is designed to be compatible with:
 
 | Target                 | Integration                                                                                                    |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Mountain**&#x2001;⛰️ | Starts the DNS server at initialization and distributes `DnsPort` via managed state                            |
-| **Air**&#x2001;🪁      | Uses `LandDnsResolver` as `reqwest` DNS override for secure HTTP requests                                      |
-| **Cocoon**&#x2001;🦋   | Resolves `editor.land` domains through the local DNS server for `gRPC` IPC; also a `WebSocket` `JSON`-RPC peer |
-| **Sky**&#x2001;🌌      | Browser workbench peer on the direct `WebSocket` `JSON`-RPC path                                               |
-| **SideCar**&#x2001;🚃  | Spawns `Node.js` sidecars with DNS override pointing at the local server                                       |
+| **Mountain** ⛰️ | Starts the DNS server at initialization and distributes `DnsPort` via managed state                            |
+| **Air** 🪁      | Uses `LandDnsResolver` as `reqwest` DNS override for secure HTTP requests                                      |
+| **Cocoon** 🦋   | Resolves `editor.land` domains through the local DNS server for `gRPC` IPC; also a `WebSocket` `JSON`-RPC peer |
+| **Sky** 🌌      | Browser workbench peer on the direct `WebSocket` `JSON`-RPC path                                               |
+| **SideCar** 🚃  | Spawns `Node.js` sidecars with DNS override pointing at the local server                                       |
 
 ---
 
 ## API Reference
 
-- **[Rust API Documentation](https://rust.documentation.mist.editor.land/)**&#x2001;📖
+- **[Rust API Documentation](https://rust.documentation.mist.editor.land/)** 📖
 
 ---
 
@@ -385,18 +385,18 @@ Mist is designed to be compatible with:
     - In-depth technical details
 - [Land Documentation](../../Documentation/GitHub/README.md) - Complete
   documentation index
-- **Air**&#x2001;🪁 - Background daemon that consumes Mist for HTTP client DNS -
+- **Air** 🪁 - Background daemon that consumes Mist for HTTP client DNS -
   [GitHub](https://github.com/CodeEditorLand/Air)
-- **Vine**&#x2001;🌿 - `gRPC` protocol layer -
+- **Vine** 🌿 - `gRPC` protocol layer -
   [GitHub](https://github.com/CodeEditorLand/Vine)
-- **Mountain**&#x2001;⛰️ - Main application process -
+- **Mountain** ⛰️ - Main application process -
   [GitHub](https://github.com/CodeEditorLand/Mountain)
 - [CHANGELOG](https://github.com/CodeEditorLand/Mist/tree/Current/CHANGELOG.md)
     - Version history
 
 ---
 
-## License&#x2001;⚖️
+## License ⚖️
 
 This project is released into the public domain under the **Creative Commons CC0
 Universal** license. You are free to use, modify, distribute, and build upon
@@ -406,7 +406,7 @@ file.
 
 ---
 
-## Changelog&#x2001;📜
+## Changelog 📜
 
 Stay updated with our progress! See
 [`CHANGELOG.md`](https://github.com/CodeEditorLand/Mist/tree/Current/CHANGELOG.md)
@@ -414,9 +414,9 @@ for a history of changes.
 
 ---
 
-## Funding & Acknowledgements&#x2001;🙏🏻
+## Funding & Acknowledgements 🙏🏻
 
-**Land**&#x2001;🏞️ is proud to be an open-source endeavor. Our journey is
+**Land** 🏞️ is proud to be an open-source endeavor. Our journey is
 significantly supported by the organizations and projects that believe in the
 future of open-source software.
 

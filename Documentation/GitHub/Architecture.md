@@ -9,13 +9,13 @@
 				</picture>
 			</h3>
 		</td>
-		<td colspan="3" valign="top"><h3 align="center">Mist&#x2001;🌫️</h3></td>
+		<td colspan="3" valign="top"><h3 align="center">Mist 🌫️</h3></td>
 	</tr>
 </table>
 
 ---
 
-# **Mist**&#x2001;🌫️&#x2001;Architecture
+# **Mist** 🌫️ Architecture
 
 `Mist` is a local DNS server that provides network isolation for `Land`'s
 sidecar processes:
@@ -60,7 +60,7 @@ graph TB
     ZONE -->|"NXDOMAIN"| BLOCKED["Blocked domains"]
 ```
 
-## Overview&#x2001;📋
+## Overview 📋
 
 `Mist` runs a local `Hickory DNS` server authoritative for the `editor.land`
 zone on loopback (port 5380):
@@ -80,7 +80,7 @@ zone on loopback (port 5380):
 
 ---
 
-## Architecture&#x2001;🏗️
+## Architecture 🏗️
 
 ```
 +----------------------------------------------------------+
@@ -107,7 +107,7 @@ zone on loopback (port 5380):
 +----------------------------------------------------------+
 ```
 
-### Module Map&#x2001;🗺️
+### Module Map 🗺️
 
 | Path                        | Purpose                                                |
 | --------------------------- | ------------------------------------------------------ |
@@ -120,7 +120,7 @@ zone on loopback (port 5380):
 
 ---
 
-## DNS Zone Configuration&#x2001;🌐
+## DNS Zone Configuration 🌐
 
 `Mist` serves the `editor.land` zone with the following configuration:
 
@@ -142,7 +142,7 @@ All `*.editor.land` subdomains resolve to `127.0.0.1`:
 - Prevents any sidecar process from exfiltrating data through DNS
 - Provides a first line of defense against compromised extension code
 
-### Resolution Rules&#x2001;📋
+### Resolution Rules 📋
 
 | Query Pattern      | Response                | Behavior                        |
 | ------------------ | ----------------------- | ------------------------------- |
@@ -152,7 +152,7 @@ All `*.editor.land` subdomains resolve to `127.0.0.1`:
 
 ---
 
-## Forward Allowlisting&#x2001;📝
+## Forward Allowlisting 📝
 
 `Mist` maintains a configurable allowlist of trusted external domains that
 sidecar processes may resolve:
@@ -170,7 +170,7 @@ at runtime.
 
 ---
 
-## DNSSEC&#x2001;🔐
+## DNSSEC 🔐
 
 `Mist` supports DNSSEC with ECDSA P-256 signing for the `editor.land` zone:
 
@@ -188,7 +188,7 @@ DNSSEC.
 
 ---
 
-## WebSocket Transport&#x2001;🔌
+## WebSocket Transport 🔌
 
 In addition to DNS serving, `Mist` provides a WebSocket transport layer for
 `Sky`<->`Cocoon` communication:
@@ -210,7 +210,7 @@ Cocoon (Node.js extension host)
 
 ---
 
-## Startup Sequence&#x2001;🚀
+## Startup Sequence 🚀
 
 ```
 1. Mountain spawns Mist binary
@@ -234,7 +234,7 @@ Cocoon (Node.js extension host)
 
 ---
 
-## Related Documentation&#x2001;📚
+## Related Documentation 📚
 
 - [Air](https://github.com/CodeEditorLand/Air/tree/Current/Documentation/GitHub/Architecture.md) -
   Background daemon (DNS consumer)

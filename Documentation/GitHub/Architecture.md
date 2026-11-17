@@ -82,7 +82,7 @@ zone on loopback (port 5380):
 
 ## Architecture 🏗️
 
-```
+```text
 +----------------------------------------------------------+
 |                        Mist                               |
 |                                                           |
@@ -124,7 +124,7 @@ zone on loopback (port 5380):
 
 `Mist` serves the `editor.land` zone with the following configuration:
 
-```
+```text
 editor.land.  IN SOA  localhost. root.editor.land. (
     2026010100 ; serial
     3600       ; refresh
@@ -196,7 +196,7 @@ In addition to DNS serving, `Mist` provides a WebSocket transport layer for
 - Used for real-time data streaming between the UI layer and the extension host
 - Used when `gRPC` is unavailable or inappropriate for the communication pattern
 
-```
+```text
 Sky UI (WebView)
     |
     | WebSocket
@@ -228,7 +228,7 @@ sequenceDiagram
 ```
 
 
-```
+```text
 1. Mountain spawns Mist binary
    - Port 5380 is bound (UDP + TCP)
    - System DNS configuration may be updated to point to loopback
@@ -283,6 +283,6 @@ sequenceDiagram
 ---
 
 **Project Maintainers:** Source Open
-([Source/Open@editor.land](mailto:Source/Open@editor.land)) |
+([Source/Open@Editor.Land](mailto:Source/Open@Editor.Land)) |
 [GitHub Repository](https://github.com/CodeEditorLand/Mist) |
 [Report an Issue](https://github.com/CodeEditorLand/Mist/issues)

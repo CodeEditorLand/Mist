@@ -200,7 +200,7 @@ graph LR
 
 ## Project Structure 🗺️
 
-```
+```text
 Mist/
 ├── Source/
 │   ├── Library.rs              # Library root, DNS server lifecycle

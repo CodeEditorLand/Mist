@@ -1,4 +1,4 @@
-# **Mist** 🌫️
+# **Mist**
 
 <table>
 	<tr>
@@ -56,7 +56,7 @@ editor and the outside world."_
 
 ---
 
-## Overview
+## Overview 📋
 
 **Mist** provides DNS isolation and private network resolution for the **Land**
 Code Editor. It creates a secure DNS sandbox that resolves all `*.editor.land`
@@ -130,7 +130,7 @@ allowlist, this creates a complete network boundary.
 
 ---
 
-## System Architecture
+## System Architecture 🏗️
 
 ```mermaid
 graph LR
@@ -185,7 +185,7 @@ graph LR
 
 ---
 
-## Key Components
+## Key Components 🧩
 
 | Component           | Path                        | Description                                                                                                   |
 | ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------- |
@@ -222,7 +222,7 @@ Mist/
 
 ---
 
-## In the Land Project
+## In the Land Project 🔌
 
 **Mist** provides the DNS isolation that secures the Land private network. All
 `*.editor.land` domains resolve to `127.0.0.1`, preventing external network
@@ -232,7 +232,7 @@ leakage. External DNS queries are restricted to a strict allowlist.
 **Air** 🪁 (background daemon, uses Mist's DNS resolver for its HTTP
 client) and **Vine** 🌿 (`gRPC` protocol layer).
 
-### Integration
+### Integration 🔗
 
 | Consumer               | How Mist is Used                                                                                                                   |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -241,7 +241,7 @@ client) and **Vine** 🌿 (`gRPC` protocol layer).
 | **SideCar** 🚃  | Spawns `Node.js` sidecars with DNS override configuration, ensuring all DNS queries go through the local server.                   |
 | **Cocoon** 🦋   | The `Node.js` extension host can resolve `editor.land` domains via the local DNS server for `gRPC` communication with Mountain.    |
 
-### DNS Zone Configuration
+### DNS Zone Configuration ⚙️
 
 **Authoritative Zone: `editor.land`** - All subdomains of `editor.land` resolve
 to `127.0.0.1`:
@@ -269,19 +269,19 @@ the DNS server for the direct Sky↔Cocoon path:
 
 ## Getting Started 🚀
 
-### Prerequisites
+### Prerequisites 📦
 
 - **Rust** 1.75 or later
 - No system DNS configuration required - Mist binds to `127.0.0.1` only
 
-### Build
+### Build 📦
 
 ```bash
 cd Element/Mist
 cargo build --release
 ```
 
-### Test
+### Test 🧪
 
 ```bash
 # Run all tests
@@ -294,7 +294,7 @@ cargo test --test integration
 RUST_LOG=debug cargo test
 ```
 
-### As a Library
+### As a Library 📦
 
 ```rust
 use Mist::start;
@@ -308,7 +308,7 @@ let Port = Mist::start(0)?;
 println!("DNS server running on 127.0.0.1:{}", Port);
 ```
 
-### Creating a DNS Resolver
+### Creating a DNS Resolver 🔍
 
 ```rust
 use Mist::resolver::{land_resolver, LandDnsResolver};
@@ -321,7 +321,7 @@ let Resolver = land_resolver(Port);
 let Resolver = LandDnsResolver::new(Port);
 ```
 
-### Key Dependencies
+### Key Dependencies 🧩
 
 | Crate               | Purpose                                                        |
 | ------------------- | -------------------------------------------------------------- |
@@ -357,7 +357,7 @@ Mist enforces security at multiple layers:
 
 ---
 
-## Compatibility
+## Compatibility 🔌
 
 Mist is designed to be compatible with:
 
@@ -371,19 +371,21 @@ Mist is designed to be compatible with:
 
 ---
 
-## API Reference
+## API Reference 📖
+
+- [Architecture](https://github.com/CodeEditorLand/Mist/tree/Current/Documentation/GitHub/Architecture.md) - DNS zone, forwarding allowlist, DNSSEC and WebSocket transport
 
 - **[Rust API Documentation](https://rust.documentation.mist.editor.land/)** 📖
 
 ---
 
-## Related Documentation
+## Related Documentation 📖
 
 - [Architecture Overview](https://github.com/CodeEditorLand/Mist/tree/Current/Documentation/GitHub/Architecture.md)
     - Internal module structure
 - [Deep Dive](https://github.com/CodeEditorLand/Mist/tree/Current/Documentation/GitHub/DeepDive.md)
     - In-depth technical details
-- [Land Documentation](../../Documentation/GitHub/README.md) - Complete
+- [Land Documentation](https://github.com/CodeEditorLand/Land/tree/Current/Documentation/GitHub/README.md) - Complete
   documentation index
 - **Air** 🪁 - Background daemon that consumes Mist for HTTP client DNS -
   [GitHub](https://github.com/CodeEditorLand/Air)

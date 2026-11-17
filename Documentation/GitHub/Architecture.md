@@ -15,7 +15,7 @@
 
 ---
 
-# **Mist** 🌫️ Architecture
+# **Mist** Architecture
 
 `Mist` is a local DNS server that provides network isolation for `Land`'s
 sidecar processes:
@@ -26,7 +26,7 @@ sidecar processes:
 
 ---
 
-## Table of Contents
+## Table of Contents 📖
 
 1. [Overview](#overview)
 2. [Architecture](#architecture)
@@ -179,10 +179,10 @@ at runtime.
 | Algorithm      | ECDSA P-256 (algorithm 13)           |
 | Key generation | First-run automatic generation       |
 | Key storage    | Application data directory           |
-| RRSIG records  | Automatically generated on zone load |
+| RRSIG records  | Automatically produced on zone load |
 | Validation     | N/A (authoritative server)           |
 
-Signing keys are generated on first run and cached for subsequent starts. Zone
+Signing keys are created on first run and cached for subsequent starts. Zone
 data is signed with RRSIG records before responding to queries that request
 DNSSEC.
 
@@ -212,6 +212,22 @@ Cocoon (Node.js extension host)
 
 ## Startup Sequence 🚀
 
+```mermaid
+sequenceDiagram
+    participant Host as Mountain or embedder
+    participant Server as Mist Server
+    participant Zone as Zone
+    participant Port as portpicker
+
+    Host->>Server: start with preferred port
+    Server->>Port: find available port when preferred is busy
+    Port-->>Server: bound port
+    Server->>Zone: build authoritative editor.land records
+    Server->>Server: load or create DNSSEC signing keys
+    Server-->>Host: running DNS and WebSocket endpoints
+```
+
+
 ```
 1. Mountain spawns Mist binary
    - Port 5380 is bound (UDP + TCP)
@@ -220,7 +236,7 @@ Cocoon (Node.js extension host)
 2. Mist opens UDP and TCP listeners on port 5380
    - Hickory DNS server initializes
    - editor.land zone is loaded from configuration
-   - DNSSEC signing keys are loaded or generated
+   - DNSSEC signing keys are loaded or created
 
 3. DNS resolution begins
    - *.editor.land queries answered authoritatively
@@ -247,7 +263,7 @@ Cocoon (Node.js extension host)
 
 ---
 
-## Shim Compatibility
+## Shim Compatibility 🛡️
 
 | 🟠 Low-Level Shim                              | 🔵 Coverage Shim                   |
 | ---------------------------------------------- | ---------------------------------- |

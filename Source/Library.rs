@@ -97,7 +97,7 @@ pub static DNS_PORT:OnceCell<u16> = OnceCell::new();
 ///
 /// ## Returns
 ///
-/// The port number (0–65535), or `0` if the server hasn't been started.
+/// The port number (0-65535), or `0` if the server hasn't been started.
 ///
 /// ## Example
 ///
@@ -126,7 +126,7 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 ///
 /// ## Parameters
 ///
-/// * `preferred_port` — The preferred port number to use. If this port is
+/// * `preferred_port` - The preferred port number to use. If this port is
 ///   already in use, portpicker will find an alternative available port.
 ///
 /// ## Returns
@@ -149,32 +149,52 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// }
 /// ```
 pub fn start(preferred_port:u16) -> Result<u16> {
-	// Step 1: Find an available port using portpicker
-	// Try the preferred port first, then pick a random available one
-	let port = portpicker::pick_unused_port()
-		.or_else(|| {
-			// If pick_unused_port returns None, try the preferred port
-			// explicitly
-			Some(preferred_port)
-		})
-		.ok_or_else(|| anyhow::anyhow!("Failed to find an available port"))?;
+	// Step 1: Honour the caller's preferred port. A port already taken by
+	// another process is a normal non-happy path: warn and fall back to an
+	// automatically selected port instead of failing the whole host.
+	let port = match std::net::UdpSocket::bind(("127.0.0.1", preferred_port)) {
+		Ok(_) => preferred_port,
 
-	// Step 2: Set the DNS_PORT globally
+		Err(Error) => {
+			eprintln!(
+				"warn: [Mist] preferred DNS port {} unavailable ({}); selecting an alternative port",
+				preferred_port,
+				Error
+			);
+
+			match portpicker::pick_unused_port() {
+				Some(Port) => Port,
+
+				None => {
+					eprintln!(
+						"warn: [Mist] no unused DNS port available; the DNS server will not start"
+					);
+
+					return Err(anyhow::anyhow!("Failed to find an available DNS port"));
+				},
+			}
+		},
+	};
+
+	// Step 2: Build the DNS catalog before claiming the global port. If the
+	// catalog cannot be built the global stays unset so a later call can
+	// retry cleanly.
+	let catalog = Server::BuildCatalog(port)?;
+
+	// Step 3: Set the DNS_PORT globally.
 	DNS_PORT
 		.set(port)
 		.map_err(|_| anyhow::anyhow!("DNS port has already been set"))?;
 
-	// Step 3: Build the DNS catalog
-	let catalog = Server::BuildCatalog(port)?;
-
-	// Step 4: Spawn the DNS server as a background task
+	// Step 4: Spawn the DNS server as a background task. A failed server is
+	// reported but does not panic the host thread.
 	thread::spawn(move || {
 		if let Err(e) = Server::ServeSync(catalog, port) {
-			eprintln!("DNS server error: {:?}", e);
+			eprintln!("warn: [Mist] DNS server stopped: {:?}", e);
 		}
 	});
 
-	// Step 5: Return the port number
+	// Step 5: Return the port number.
 	Ok(port)
 }
 
@@ -183,47 +203,26 @@ mod tests {
 
 	use super::*;
 
+	// The DNS_PORT OnceCell is process-wide. Keeping the three assertions
+	// that depend on its state in one test makes them independent of test
+	// execution order (Rust runs tests concurrently in one process).
 	#[test]
-	fn test_dns_port_initial_state() {
-		// Initially, DNS_PORT should be 0
-		let port = dns_port();
+	fn test_dns_port_lifecycle() {
+		assert_eq!(dns_port(), 0, "DNS_PORT must start unset");
 
-		assert_eq!(port, 0);
-	}
+		// Use a non-standard port for testing.
+		let preferred_port = 15353;
 
-	#[test]
-	fn test_dns_port_starts_server() {
-		// Test that we can start the DNS server
-		let preferred_port = 15353; // Use a non-standard port for testing
+		let port = start(preferred_port).expect("Failed to start DNS server");
 
-		let result = start(preferred_port);
-
-		// The server should start successfully
-		assert!(result.is_ok(), "Failed to start DNS server");
-
-		let port = result.unwrap();
-
-		// The port should be within valid range
 		assert!(port >= 1024, "Port should be >= 1024");
 
 		assert!(port <= 65535, "Port should be <= 65535");
 
-		// DNS_PORT should now return the same port
-		let retrieved_port = dns_port();
+		assert_eq!(dns_port(), port, "DNS_PORT should match returned port");
 
-		assert_eq!(port, retrieved_port, "DNS_PORT should match returned port");
-	}
-
-	#[test]
-	fn test_start_fails_on_second_call() {
-		// Starting the server twice should fail
-		let port1 = start(15354);
-
-		assert!(port1.is_ok(), "First start should succeed");
-
-		let port2 = start(15355);
-
-		assert!(port2.is_err(), "Second start should fail");
+		// The global is set exactly once; a second start must be rejected.
+		assert!(start(15355).is_err(), "Second start should fail");
 	}
 
 	#[test]

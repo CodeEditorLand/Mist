@@ -40,9 +40,13 @@ fn test_dns_catalog_building() {
 	println!("DNS catalog built successfully");
 }
 
-/// Test DNS server can bind to loopback
+/// STUB / NO-OP - does not actually test loopback binding; it only
+/// confirms `build_catalog` succeeds. A real test would start the server
+/// and assert a UDP socket is bound on 127.0.0.1 and answers a query.
+/// That cannot be asserted here yet: `start()` spawns the server on a
+/// background thread and returns before the bind is confirmed.
 #[test]
-fn test_dns_server_loopback_binding() {
+fn test_dns_server_loopback_binding_stub() {
 	// Verify we can build a catalog
 	let catalog = build_catalog(15357).expect("Failed to build catalog");
 
@@ -79,9 +83,12 @@ fn test_authority_creation() {
 	println!("Authority created successfully");
 }
 
-/// Test resolver creation
+/// STUB - constructs the resolver but asserts no behaviour. A real test
+/// would send a `*.editor.land` query through it and assert a loopback
+/// answer; it cannot yet because `TokioResolver` is a zero-size placeholder
+/// awaiting a real DNS client.
 #[test]
-fn test_resolver_creation() {
+fn test_resolver_creation_stub() {
 	let port = 15400;
 
 	let resolver = Resolver::land_resolver(port);
@@ -92,9 +99,12 @@ fn test_resolver_creation() {
 	println!("Resolver created successfully");
 }
 
-/// Test land DNS resolver creation
+/// STUB - constructs the resolver but asserts no behaviour. A real test
+/// would call `resolve()` (via `reqwest::dns::Resolve`) and assert that an
+/// `*.editor.land` name yields 127.0.0.1 and other names yield nothing;
+/// this test only checks that construction does not panic.
 #[test]
-fn test_land_dns_resolver_creation() {
+fn test_land_dns_resolver_creation_stub() {
 	let port = 15401;
 
 	let resolver = Resolver::LandDnsResolver::new(port);

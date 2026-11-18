@@ -20,7 +20,7 @@
 //!
 //! Binary frames are reserved for B7-S6 phase 2 (length-prefixed
 //! prost-encoded payloads for diagnostic batches and tree
-//! children) — current implementation logs and ignores them.
+//! children) - current implementation logs and ignores them.
 //!
 //! # Auth
 //!
@@ -53,6 +53,7 @@ use std::{
 		Arc,
 		atomic::{AtomicBool, AtomicU64, Ordering},
 	},
+	time::Duration,
 };
 
 use anyhow::Result;
@@ -146,7 +147,7 @@ pub type DefaultHandlerFn =
 /// Method dispatch table.
 ///
 /// Lookups are read-dominated (one per inbound frame) so the maps sit
-/// behind `RwLock`, not `Mutex` — concurrent connections never serialize
+/// behind `RwLock`, not `Mutex` - concurrent connections never serialize
 /// on dispatch.
 #[derive(Default)]
 pub struct HandlerRegistry {
@@ -191,14 +192,14 @@ impl HandlerRegistry {
 /// accepting connections; spawns a task per connection.
 ///
 /// `Secret:Some(_)` enforces upgrade-time auth (header, query
-/// parameter, or subprotocol — see the module docs); `Secret:None`
+/// parameter, or subprotocol - see the module docs); `Secret:None`
 /// accepts every loopback connection unchecked.
 ///
 /// # Parameters
 ///
-/// * `Port` — The local port to bind the WebSocket listener to.
-/// * `Secret` — Optional shared secret for upgrade-time authentication.
-/// * `Registry` — The method dispatch table for JSON-RPC handlers.
+/// * `Port` - The local port to bind the WebSocket listener to.
+/// * `Secret` - Optional shared secret for upgrade-time authentication.
+/// * `Registry` - The method dispatch table for JSON-RPC handlers.
 ///
 /// # Returns
 ///
@@ -405,7 +406,7 @@ async fn HandleConnection(Stream:TcpStream, Secret:Option<SharedSecret>, Registr
 				};
 
 				if Identifier.is_null() {
-					// Notification — no response expected.
+					// Notification - no response expected.
 					continue;
 				}
 
@@ -432,6 +433,57 @@ async fn HandleConnection(Stream:TcpStream, Secret:Option<SharedSecret>, Registr
 /// Maps request identifiers to their response senders.
 type PendingMap = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;
 
+/// Maximum time a client waits for the reply to one [`Client::invoke`]
+/// before treating a still-connected peer as silent and timing out.
+const RequestTimeout:Duration = Duration::from_secs(30);
+
+/// Returns the effective per-request deadline.
+///
+/// Guards against a zero/invalid configured duration so a future edit
+/// cannot silently turn every invoke into an immediate-cancel loop; an
+/// unusable deadline degrades to a short fallback with a warning rather
+/// than panicking or reporting false success.
+fn RequestDeadline() -> Duration {
+	if RequestTimeout.is_zero() {
+		tracing::warn!(target:"Mist::WebSocket", "invalid zero request timeout; using 1 s fallback");
+		return Duration::from_secs(1);
+	}
+
+	RequestTimeout
+}
+
+/// Typed failures produced by [`Client::invoke`].
+///
+/// `invoke` keeps its `Result<Value, String>` API for transport
+/// compatibility; each variant owns the canonical message that is both
+/// returned to callers and logged, so a timeout is a distinct typed
+/// error rather than an ambiguous string.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InvokeError {
+	/// Peer stayed connected but produced no reply before the deadline.
+	Timeout { Method:String, Identifier:u64, Millis:u64 },
+	/// The response oneshot was dropped without a value.
+	Cancelled,
+	/// The client was already closed when `invoke` was called.
+	ConnectionClosed,
+	/// The request frame could not be sent.
+	SendFailed,
+}
+
+impl std::fmt::Display for InvokeError {
+	fn fmt(&self, Formatter:&mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			Self::Timeout { Method, Identifier, Millis } =>
+				write!(Formatter, "request timed out after {} ms: {}/{} (peer connected but silent)", Millis, Method, Identifier),
+			Self::Cancelled => Formatter.write_str("request cancelled"),
+			Self::ConnectionClosed => Formatter.write_str("connection closed"),
+			Self::SendFailed => Formatter.write_str("send failed"),
+		}
+	}
+}
+
+impl std::error::Error for InvokeError {}
+
 /// Client-side WebSocket connection.
 ///
 /// Holds the write half of the WebSocket and a map of pending
@@ -457,7 +509,7 @@ impl Client {
 	///
 	/// # Parameters
 	///
-	/// * `Address` — The WebSocket server URL (ws:// or wss:// scheme).
+	/// * `Address` - The WebSocket server URL (ws:// or wss:// scheme).
 	///
 	/// # Returns
 	///
@@ -476,8 +528,8 @@ impl Client {
 	///
 	/// # Parameters
 	///
-	/// * `Address` — The WebSocket server URL (ws:// or wss:// scheme).
-	/// * `Secret` — The shared secret for upgrade-time authentication.
+	/// * `Address` - The WebSocket server URL (ws:// or wss:// scheme).
+	/// * `Secret` - The shared secret for upgrade-time authentication.
 	///
 	/// # Returns
 	///
@@ -537,7 +589,9 @@ impl Client {
 										Ok(Envelope.get("result").cloned().unwrap_or(Value::Null))
 									};
 
-									let _ = Sender.send(Result);
+									if Sender.send(Result).is_err() {
+										tracing::warn!(target:"Mist::WebSocket", "reader: reply channel closed for request {} (late reply after timeout/cancel)", Identifier);
+									}
 								}
 							}
 						}
@@ -552,8 +606,10 @@ impl Client {
 			// Drain any remaining pending senders with disconnect errors.
 			let mut Pending = SelfForReader.Pending.lock().await;
 
-			for (_, Sender) in Pending.drain() {
-				let _ = Sender.send(Err("connection closed".into()));
+			for (Identifier, Sender) in Pending.drain() {
+				if Sender.send(Err("connection closed".into())).is_err() {
+					tracing::warn!(target:"Mist::WebSocket", "drain: reply channel closed for pending request {}", Identifier);
+				}
 			}
 		});
 
@@ -563,20 +619,24 @@ impl Client {
 	/// Invokes a remote method.
 	///
 	/// Returns the result Value or an error string. Pending requests
-	/// are tracked by identifier; on disconnect the future resolves
-	/// with `Err("connection closed")`.
+	/// are tracked by identifier. A reply resolves the request; a
+	/// disconnect drain yields `Err("connection closed")`. If the peer
+	/// stays connected but silent, the request times out after
+	/// [`RequestTimeout`] with a typed [`InvokeError::Timeout`] message
+	/// instead of remaining pending forever.
 	///
 	/// # Parameters
 	///
-	/// * `Method` — The JSON-RPC method name.
-	/// * `Params` — The JSON parameter value.
+	/// * `Method` - The JSON-RPC method name.
+	/// * `Params` - The JSON parameter value.
 	///
 	/// # Returns
 	///
 	/// The result `Value` on success, or an error `String`.
 	pub async fn invoke(&self, Method:&str, Params:Value) -> Result<Value, String> {
 		if self.Closed.load(Ordering::Relaxed) {
-			return Err("connection closed".into());
+			tracing::warn!(target:"Mist::WebSocket", "invoke({}) rejected: connection already closed", Method);
+			return Err(InvokeError::ConnectionClosed.to_string());
 		}
 
 		let Identifier = self.NextIdentifier.fetch_add(1, Ordering::Relaxed);
@@ -591,21 +651,80 @@ impl Client {
 
 		let SendResult = self.Sink.lock().await.send(Message::Text(Utf8Bytes::from(Text))).await;
 
-		if SendResult.is_err() {
-			self.Pending.lock().await.remove(&Identifier);
+		if let Err(Error) = SendResult {
+			// Defensive: drop the sender inserted above so the reader's
+			// reply path or the disconnect drain cannot settle this request
+			// a second time after the send failure.
+			let Removed = self.Pending.lock().await.remove(&Identifier);
 
-			return Err("send failed".into());
+			if Removed.is_none() {
+				tracing::warn!(target:"Mist::WebSocket", "invoke({}/{}) send failed but pending entry was already removed", Method, Identifier);
+			}
+
+			tracing::warn!(target:"Mist::WebSocket", "invoke({}/{}) send failed: {}", Method, Identifier, Error);
+
+			return Err(InvokeError::SendFailed.to_string());
 		}
 
-		Rx.await.map_err(|_| "request cancelled".to_string())?
+		// Per-request deadline. `tokio::time::timeout` owns `Rx`; its future
+		// is dropped on every exit below, which cancels the timer:
+		//   - reply                 -> Rx ready, timeout returns, timer dropped;
+		//   - disconnect drain/close -> reader sends `Err("connection closed")`
+		//                              into Rx, same drop path;
+		//   - send failure          -> returned above, before a timer exists;
+		//   - cancellation          -> Rx resolves Err, timer dropped;
+		//   - deadline              -> elapsed, pending removed, timer dropped.
+		// No timer outlives a settled request; the wire format is unchanged
+		// because the deadline is local to this future.
+		let Deadline = RequestDeadline();
+
+		match tokio::time::timeout(Deadline, Rx).await {
+			Ok(Ok(Result)) => Result,
+			Ok(Err(_)) => {
+				// The response sender was dropped without a value. Remove any
+				// lingering entry under the reader's lock and warn; never
+				// report a cancelled channel as a successful reply.
+				let Removed = self.Pending.lock().await.remove(&Identifier);
+
+				if Removed.is_none() {
+					tracing::warn!(target:"Mist::WebSocket", "invoke({}/{}) cancelled but pending entry was already removed", Method, Identifier);
+				}
+
+				tracing::warn!(target:"Mist::WebSocket", "invoke({}/{}) request cancelled: response channel closed", Method, Identifier);
+
+				Err(InvokeError::Cancelled.to_string())
+			},
+			Err(_) => {
+				// The peer stayed connected and produced no reply. Remove the
+				// pending sender under the same lock the reader uses so a late
+				// reply or the drain cannot double-settle; dropping the sender
+				// closes the channel, so a late send fails and is warned about
+				// by the reader instead of yielding a false success.
+				let Removed = self.Pending.lock().await.remove(&Identifier);
+
+				if Removed.is_none() {
+					tracing::warn!(target:"Mist::WebSocket", "invoke({}/{}) timed out but pending entry was already removed (settled concurrently)", Method, Identifier);
+				}
+
+				let Error = InvokeError::Timeout {
+					Method:Method.to_string(),
+					Identifier,
+					Millis:Deadline.as_millis() as u64,
+				};
+
+				tracing::warn!(target:"Mist::WebSocket", "invoke({}/{}) {}", Method, Identifier, Error);
+
+				Err(Error.to_string())
+			},
+		}
 	}
 
 	/// Sends a one-way notification (no response expected).
 	///
 	/// # Parameters
 	///
-	/// * `Method` — The JSON-RPC method name.
-	/// * `Params` — The JSON parameter value.
+	/// * `Method` - The JSON-RPC method name.
+	/// * `Params` - The JSON parameter value.
 	///
 	/// # Returns
 	///

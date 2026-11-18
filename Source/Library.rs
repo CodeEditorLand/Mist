@@ -60,10 +60,16 @@
 //! - [Repository](https://github.com/CodeEditorLand/Mist)
 //! - [Architecture](Documentation/GitHub/Architecture.md)
 
-use std::thread;
+use std::{
+	net::{IpAddr, Ipv4Addr, SocketAddr},
+	sync::mpsc,
+	thread,
+};
 
 use anyhow::Result;
+use hickory_server::Server as Hickory;
 use once_cell::sync::OnceCell;
+use tokio::net::{TcpListener as Listener, UdpSocket as Socket};
 
 // Public module exports (PascalCase per project convention)
 pub mod Server;
@@ -115,11 +121,14 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// Starts the DNS server for the CodeEditorLand private network.
 ///
 /// Performs the following steps:
-/// 1. Uses portpicker to find an available port (tries `preferred_port` first)
-/// 2. Sets the `DNS_PORT` global variable
-/// 3. Builds the DNS catalog with the `editor.land` zone
-/// 4. Spawns the DNS server as a background task
-/// 5. Returns the port number
+/// 1. Binds the DNS sockets to `127.0.0.1:{preferred_port}`, or to an
+///    OS-assigned ephemeral port when that address is unavailable or
+///    `preferred_port` is `0`
+/// 2. Builds the DNS catalog with the `editor.land` zone
+/// 3. Spawns the DNS server as a background task and waits for it to report
+///    the port it actually bound
+/// 4. Sets the `DNS_PORT` global variable to that real port
+/// 5. Returns the real bound port
 ///
 /// The DNS server runs in the background and can be stopped by dropping
 /// the application.
@@ -149,53 +158,170 @@ pub fn dns_port() -> u16 { *DNS_PORT.get().unwrap_or(&0) }
 /// }
 /// ```
 pub fn start(preferred_port:u16) -> Result<u16> {
-	// Step 1: Honour the caller's preferred port. A port already taken by
-	// another process is a normal non-happy path: warn and fall back to an
-	// automatically selected port instead of failing the whole host.
-	let port = match std::net::UdpSocket::bind(("127.0.0.1", preferred_port)) {
-		Ok(_) => preferred_port,
+	// A second bind would leave two servers fighting over the one global
+	// port. Refuse early so the caller can fall back instead of getting a
+	// port that no server actually owns.
+	match DNS_PORT.get() {
+		Some(_) => {
+			eprintln!("warn: [Mist] DNS server already started; refusing a second start()");
+
+			return Err(anyhow::anyhow!("DNS server already started"));
+		},
+
+		None => {},
+	}
+
+	// The detached server reports the port it actually bound over this
+	// channel. `start` blocks on the receive, so it can never advertise
+	// success before the sockets are live, and a panic in the detached task
+	// drops the sender, which we surface as an error instead of a false
+	// success on an unbound server.
+	let (Sender, Receiver) = mpsc::channel::<Result<u16>>();
+
+	thread::spawn(move || {
+		let Runtime = match tokio::runtime::Runtime::new() {
+			Ok(Built) => Built,
+
+			Err(Error) => {
+				eprintln!("warn: [Mist] failed to build DNS runtime: {}", Error);
+				let _ = Sender.send(Err(anyhow::anyhow!("failed to build DNS runtime: {}", Error)));
+
+				return;
+			},
+		};
+
+		Runtime.block_on(async move {
+			let Loopback = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+
+			// Bind once and keep the socket: this is the authoritative bind.
+			// There is no longer a throwaway probe that can disagree with it.
+			let UDPSocket = match Socket::bind(SocketAddr::new(Loopback, preferred_port)).await {
+				Ok(Bound) => Bound,
+
+				Err(Error) => {
+					// A requested port already taken by another process is a
+					// normal non-happy path: warn and let the OS pick a free
+					// ephemeral port instead of failing the whole host.
+					eprintln!(
+						"warn: [Mist] preferred DNS port {} unavailable ({}); selecting an ephemeral port",
+						preferred_port,
+						Error
+					);
+
+					match Socket::bind(SocketAddr::new(Loopback, 0)).await {
+						Ok(Bound) => Bound,
+
+						Err(Error) => {
+							eprintln!("warn: [Mist] failed to bind DNS UDP socket: {}", Error);
+							let _ = Sender.send(Err(anyhow::anyhow!("failed to bind DNS UDP socket: {}", Error)));
+
+							return;
+						},
+					}
+				},
+			};
+
+			let Port = match UDPSocket.local_addr() {
+				Ok(Address) => Address.port(),
+
+				Err(Error) => {
+					eprintln!("warn: [Mist] failed to read bound DNS UDP port: {}", Error);
+					let _ = Sender.send(Err(anyhow::anyhow!("failed to read bound DNS UDP port: {}", Error)));
+
+					return;
+				},
+			};
+
+			// A zero means the socket did not really bind; never report it as
+			// a successful start.
+			match Port {
+				0 => {
+					eprintln!("warn: [Mist] DNS socket reported port 0 after bind; refusing to advertise success");
+					let _ = Sender.send(Err(anyhow::anyhow!("DNS socket bound to port 0")));
+
+					return;
+				},
+
+				_ => {},
+			}
+
+			let Address = SocketAddr::new(Loopback, Port);
+
+			// UDP and TCP use separate protocol namespaces, so the same
+			// numeric port is valid for both, exactly as in Server::Serve.
+			let TCPListener = match Listener::bind(Address).await {
+				Ok(Bound) => Bound,
+
+				Err(Error) => {
+					eprintln!("warn: [Mist] failed to bind DNS TCP listener on {}: {}", Address, Error);
+					let _ = Sender.send(Err(anyhow::anyhow!(
+						"failed to bind DNS TCP listener on {}: {}",
+						Address,
+						Error
+					)));
+
+					return;
+				},
+			};
+
+			let Catalog = match Server::BuildCatalog(Port) {
+				Ok(Built) => Built,
+
+				Err(Error) => {
+					eprintln!("warn: [Mist] failed to build DNS catalog: {}", Error);
+					let _ = Sender.send(Err(Error));
+
+					return;
+				},
+			};
+
+			let mut Service = Hickory::new(Catalog);
+			Service.register_socket(UDPSocket);
+			Service.register_listener(TCPListener, std::time::Duration::from_secs(5), 65_535);
+
+			// Report the real bound port only now, after both sockets are
+			// registered and the server is ready to run.
+			match Sender.send(Ok(Port)) {
+				Err(_) => eprintln!(
+					"warn: [Mist] DNS start() receiver dropped before the bound port was delivered"
+				),
+
+				Ok(_) => {},
+			}
+
+			match Service.block_until_done().await {
+				Err(Error) => eprintln!("warn: [Mist] DNS server stopped: {:?}", Error),
+
+				Ok(_) => {},
+			}
+		});
+	});
+
+	// Block until the detached server has bound and reported its real port.
+	// A closed channel means the task panicked before binding: never claim
+	// success on an unbound server, and never let the panic reach the caller.
+	match Receiver.recv() {
+		Ok(Ok(BoundPort)) => match DNS_PORT.set(BoundPort) {
+			Ok(_) => Ok(BoundPort),
+
+			Err(_) => Err(anyhow::anyhow!("DNS port has already been set")),
+		},
+
+		Ok(Err(Error)) => {
+			eprintln!("warn: [Mist] DNS server failed to bind: {}", Error);
+
+			Err(Error)
+		},
 
 		Err(Error) => {
 			eprintln!(
-				"warn: [Mist] preferred DNS port {} unavailable ({}); selecting an alternative port",
-				preferred_port,
+				"warn: [Mist] DNS server task ended before binding ({}); reporting failure",
 				Error
 			);
 
-			match portpicker::pick_unused_port() {
-				Some(Port) => Port,
-
-				None => {
-					eprintln!(
-						"warn: [Mist] no unused DNS port available; the DNS server will not start"
-					);
-
-					return Err(anyhow::anyhow!("Failed to find an available DNS port"));
-				},
-			}
+			Err(anyhow::anyhow!("DNS server task ended before binding: {}", Error))
 		},
-	};
-
-	// Step 2: Build the DNS catalog before claiming the global port. If the
-	// catalog cannot be built the global stays unset so a later call can
-	// retry cleanly.
-	let catalog = Server::BuildCatalog(port)?;
-
-	// Step 3: Set the DNS_PORT globally.
-	DNS_PORT
-		.set(port)
-		.map_err(|_| anyhow::anyhow!("DNS port has already been set"))?;
-
-	// Step 4: Spawn the DNS server as a background task. A failed server is
-	// reported but does not panic the host thread.
-	thread::spawn(move || {
-		if let Err(e) = Server::ServeSync(catalog, port) {
-			eprintln!("warn: [Mist] DNS server stopped: {:?}", e);
-		}
-	});
-
-	// Step 5: Return the port number.
-	Ok(port)
+	}
 }
 
 #[cfg(test)]
